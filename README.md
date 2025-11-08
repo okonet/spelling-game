@@ -13,7 +13,7 @@ The game presents an engaging way to practice spelling:
 5. **Correct spelling**: The character successfully jumps over, the player gets points and sees a confetti celebration
 6. **Incorrect spelling**: The character crashes into the obstacle, loses a life, and the correct spelling is shown
 7. After seeing the correct spelling, the player gets another chance to spell the word correctly
-8. The game continues until all 5 lives are lost
+8. The game continues until all 3 lives are lost
 
 ## Features
 

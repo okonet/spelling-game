@@ -59,6 +59,59 @@ body {
   margin-bottom: 30px;
 }
 
+/* Player Name Section */
+.player-name-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.player-name-label {
+  display: block;
+  font-size: 1.2em;
+  color: #667eea;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.player-name-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 20px;
+  font-size: 1.2em;
+  border: 3px solid #667eea;
+  border-radius: 15px;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.player-name-input:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+  transform: scale(1.02);
+}
+
+.view-stats-btn {
+  display: block;
+  margin: 30px auto 0;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.view-stats-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
 .difficulty-selector {
   display: flex;
   gap: 20px;
@@ -119,6 +172,24 @@ body {
   gap: 20px;
 }
 
+.player-info {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  padding: 10px 20px;
+  border-radius: 15px;
+  font-weight: bold;
+}
+
+.player-label {
+  color: #5a4a7d;
+  font-size: 1em;
+  margin-right: 8px;
+}
+
+.player-name-display {
+  color: #764ba2;
+  font-size: 1.2em;
+}
+
 .stats {
   display: flex;
   gap: 30px;
@@ -144,6 +215,12 @@ body {
   color: #d63031;
 }
 
+.game-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .speak-btn {
   padding: 10px 20px;
   font-size: 1em;
@@ -160,6 +237,24 @@ body {
 .speak-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.quit-btn {
+  padding: 10px 20px;
+  font-size: 1em;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.quit-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
 }
 
 /* Game Area */

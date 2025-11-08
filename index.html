@@ -10,6 +10,17 @@
     <!-- Start Screen -->
     <div id="start-screen" class="screen">
       <h1 class="game-title">🎮 Spelling Adventure!</h1>
+      <div class="player-name-section">
+        <label for="player-name" class="player-name-label">Enter your name:</label>
+        <input
+          type="text"
+          id="player-name"
+          class="player-name-input"
+          placeholder="Your name..."
+          autocomplete="name"
+          maxlength="30"
+        />
+      </div>
       <p class="subtitle">Choose your difficulty level:</p>
       <div class="difficulty-selector">
         <button class="difficulty-btn easy" data-difficulty="easy">
@@ -25,11 +36,16 @@
           <span class="btn-text">Hard</span>
         </button>
       </div>
+      <button id="view-stats" class="view-stats-btn">📊 View Statistics</button>
     </div>
 
     <!-- Game Screen -->
     <div id="game-screen" class="screen hidden">
       <div class="game-header">
+        <div class="player-info">
+          <span class="player-label">Player:</span>
+          <span id="player-name-display" class="player-name-display"></span>
+        </div>
         <div class="stats">
           <div class="stat-item">
             <span class="stat-label">Score:</span>
@@ -37,10 +53,13 @@
           </div>
           <div class="stat-item">
             <span class="stat-label">Lives:</span>
-            <span id="lives" class="stat-value">❤️❤️❤️❤️❤️</span>
+            <span id="lives" class="stat-value">❤️❤️❤️</span>
           </div>
         </div>
-        <button id="speak-again" class="speak-btn">🔊 Hear Again</button>
+        <div class="game-actions">
+          <button id="speak-again" class="speak-btn">🔊 Hear Again</button>
+          <button id="quit-game" class="quit-btn">🚪 Quit Game</button>
+        </div>
       </div>
 
       <div class="game-area">

@@ -10,32 +10,44 @@
     <div id="app">
       <div class="game-container">
         <h1>Spelling Game</h1>
-        <div class="score-container">
-          <span>Score: <span id="score">0</span></span>
-          <span>Streak: <span id="streak">0</span></span>
-        </div>
         
+        <div class="top-bar">
+          <div class="lives-container">
+            <span>Lives: </span>
+            <div id="lives" class="hearts"></div>
+          </div>
+          <div class="score-display">
+            Score: <span id="score">0</span>
+          </div>
+        </div>
+
         <div class="word-display">
           <button id="playSound" class="play-button">🔊 Play Word</button>
           <div id="wordHint" class="word-hint"></div>
+        </div>
+
+        <div class="game-area">
+          <div class="ground"></div>
+          <div id="character" class="character">🏃</div>
+          <div id="obstacle" class="obstacle"></div>
         </div>
 
         <div class="input-container">
           <input 
             type="text" 
             id="userInput" 
-            placeholder="Type the word here..."
+            placeholder="Type the word here and press Enter..."
             autocomplete="off"
             autofocus
           />
-          <button id="submitBtn" class="submit-button">Check</button>
         </div>
 
         <div id="feedback" class="feedback"></div>
         
-        <div class="stats">
-          <p>Correct: <span id="correct">0</span></p>
-          <p>Incorrect: <span id="incorrect">0</span></p>
+        <div id="gameOver" class="game-over hidden">
+          <h2>Game Over!</h2>
+          <p>Final Score: <span id="finalScore">0</span></p>
+          <button id="restartBtn" class="restart-button">Play Again</button>
         </div>
       </div>
     </div>

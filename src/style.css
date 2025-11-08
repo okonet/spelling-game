@@ -16,13 +16,13 @@ body {
 
 #app {
   width: 100%;
-  max-width: 600px;
+  max-width: 700px;
 }
 
 .game-container {
   background: white;
   border-radius: 20px;
-  padding: 40px;
+  padding: 30px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
@@ -30,36 +30,55 @@ h1 {
   text-align: center;
   color: #667eea;
   font-size: 2.5rem;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
-.score-container {
+.top-bar {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
   padding: 15px;
   background: #f7f7f7;
   border-radius: 10px;
-  font-size: 1.2rem;
+}
+
+.lives-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #333;
 }
 
+.hearts {
+  display: flex;
+  gap: 5px;
+  font-size: 1.5rem;
+}
+
+.score-display {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
 .word-display {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .play-button {
   background: #667eea;
   color: white;
   border: none;
-  padding: 15px 30px;
+  padding: 12px 25px;
   border-radius: 10px;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .play-button:hover {
@@ -78,19 +97,97 @@ h1 {
   font-style: italic;
 }
 
-.input-container {
-  display: flex;
-  gap: 10px;
+/* Game Area */
+.game-area {
+  position: relative;
+  height: 200px;
+  background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #90EE90 70%, #90EE90 100%);
+  border-radius: 10px;
   margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #8B4513;
+  border-top: 3px solid #654321;
+}
+
+.character {
+  position: absolute;
+  bottom: 60px;
+  left: 50px;
+  font-size: 3rem;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.character.jumping {
+  animation: jump 0.6s ease-in-out;
+}
+
+.character.crash {
+  animation: crash 0.5s ease-in-out;
+}
+
+@keyframes jump {
+  0% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(-80px) rotate(10deg); }
+  50% { transform: translateY(-100px) rotate(0deg); }
+  70% { transform: translateY(-80px) rotate(-10deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes crash {
+  0% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(10px) rotate(5deg); }
+  50% { transform: translateX(-10px) rotate(-5deg); }
+  75% { transform: translateX(10px) rotate(5deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+.obstacle {
+  position: absolute;
+  bottom: 60px;
+  right: -200px;
+  padding: 10px 20px;
+  background: #FFD700;
+  border: 3px solid #FFA500;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  transition: right 2s linear;
+  z-index: 5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.obstacle.moving {
+  right: -200px;
+  animation: moveObstacle 3s linear forwards;
+}
+
+@keyframes moveObstacle {
+  0% { right: -200px; }
+  100% { right: 150px; }
+}
+
+.input-container {
+  margin-bottom: 15px;
 }
 
 #userInput {
-  flex: 1;
+  width: 100%;
   padding: 15px;
   border: 2px solid #ddd;
   border-radius: 10px;
   font-size: 1.2rem;
   transition: border-color 0.3s;
+  text-align: center;
 }
 
 #userInput:focus {
@@ -98,35 +195,18 @@ h1 {
   border-color: #667eea;
 }
 
-.submit-button {
-  background: #48bb78;
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 10px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-}
-
-.submit-button:hover {
-  background: #38a169;
-  transform: scale(1.05);
-}
-
-.submit-button:active {
-  transform: scale(0.95);
+#userInput:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
 }
 
 .feedback {
   text-align: center;
   padding: 15px;
   border-radius: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   min-height: 54px;
-  margin-bottom: 20px;
   transition: all 0.3s;
 }
 
@@ -140,22 +220,71 @@ h1 {
   color: #742a2a;
 }
 
-.stats {
-  display: flex;
-  justify-content: space-around;
-  padding: 15px;
-  background: #f7f7f7;
-  border-radius: 10px;
+.feedback.empty {
+  min-height: 0;
+  padding: 0;
 }
 
-.stats p {
-  font-size: 1rem;
+/* Game Over Screen */
+.game-over {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  z-index: 1000;
+  min-width: 300px;
+}
+
+.game-over.hidden {
+  display: none;
+}
+
+.game-over h2 {
+  color: #e53e3e;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.game-over p {
+  font-size: 1.5rem;
   color: #333;
+  margin-bottom: 30px;
 }
 
-.stats span {
-  font-weight: bold;
+.game-over #finalScore {
   color: #667eea;
+  font-weight: bold;
+  font-size: 2rem;
+}
+
+.restart-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 10px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.restart-button:hover {
+  background: #5568d3;
+  transform: scale(1.05);
+}
+
+.restart-button:active {
+  transform: scale(0.95);
+}
+
+.hidden {
+  display: none;
 }
 
 @media (max-width: 600px) {

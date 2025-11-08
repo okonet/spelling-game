@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spelling Game</title>
+</head>
+<body>
+  <div class="container">
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen">
+      <h1 class="game-title">🎮 Spelling Adventure!</h1>
+      <p class="subtitle">Choose your difficulty level:</p>
+      <div class="difficulty-selector">
+        <button class="difficulty-btn easy" data-difficulty="easy">
+          <span class="btn-icon">🌟</span>
+          <span class="btn-text">Easy</span>
+        </button>
+        <button class="difficulty-btn medium" data-difficulty="medium">
+          <span class="btn-icon">⭐</span>
+          <span class="btn-text">Medium</span>
+        </button>
+        <button class="difficulty-btn hard" data-difficulty="hard">
+          <span class="btn-icon">🌠</span>
+          <span class="btn-text">Hard</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen hidden">
+      <div class="game-header">
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-label">Score:</span>
+            <span id="score" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Lives:</span>
+            <span id="lives" class="stat-value">❤️❤️❤️❤️❤️</span>
+          </div>
+        </div>
+        <button id="speak-again" class="speak-btn">🔊 Hear Again</button>
+      </div>
+
+      <div class="game-area">
+        <div id="character" class="character">🏃</div>
+        <div id="obstacle" class="obstacle"></div>
+      </div>
+
+      <div class="input-area">
+        <p class="instruction">Type the word you heard and press Enter:</p>
+        <input
+          type="text"
+          id="word-input"
+          class="word-input"
+          placeholder="Type here..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div id="error-message" class="error-message hidden"></div>
+      </div>
+
+      <div id="current-word" class="debug hidden"></div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen hidden">
+      <h1 class="game-over-title">Game Over!</h1>
+      <div class="final-score-container">
+        <p class="final-score-label">Your Score:</p>
+        <p id="final-score" class="final-score">0</p>
+      </div>
+      <button id="play-again" class="play-again-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

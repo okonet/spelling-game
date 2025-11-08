@@ -1,0 +1,409 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.container {
+  width: 100%;
+  max-width: 800px;
+  padding: 20px;
+}
+
+.screen {
+  background: white;
+  border-radius: 30px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.5s ease;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Start Screen */
+.game-title {
+  font-size: 3em;
+  text-align: center;
+  color: #667eea;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 1.3em;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.difficulty-selector {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.difficulty-btn {
+  padding: 20px 40px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.difficulty-btn.easy {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #2d5a3d;
+}
+
+.difficulty-btn.medium {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #7d4a2e;
+}
+
+.difficulty-btn.hard {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  color: #7d2e4a;
+}
+
+.difficulty-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.difficulty-btn:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.btn-icon {
+  font-size: 2em;
+}
+
+/* Game Screen */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.stats {
+  display: flex;
+  gap: 30px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  padding: 10px 20px;
+  border-radius: 15px;
+  font-weight: bold;
+}
+
+.stat-label {
+  color: #7d4a2e;
+  font-size: 1.1em;
+}
+
+.stat-value {
+  font-size: 1.3em;
+  color: #d63031;
+}
+
+.speak-btn {
+  padding: 10px 20px;
+  font-size: 1em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.speak-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Game Area */
+.game-area {
+  height: 200px;
+  background: linear-gradient(to bottom, #87ceeb 0%, #98d8c8 100%);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 30px;
+  border: 4px solid #5dadb6;
+}
+
+.character {
+  position: absolute;
+  bottom: 20px;
+  left: 100px;
+  font-size: 4em;
+  transform: scaleX(-1); /* Flip horizontally for left-to-right movement */
+  animation: run 0.3s ease-in-out infinite; /* Continuous running animation */
+}
+
+.character.jumping {
+  animation: jump 0.8s ease !important; /* Jump over obstacle */
+}
+
+.character.crashing {
+  animation: crash 0.6s ease !important; /* Crash into obstacle */
+}
+
+/* Continuous running animation - slight bounce */
+@keyframes run {
+  0%, 100% {
+    bottom: 20px;
+  }
+  50% {
+    bottom: 25px;
+  }
+}
+
+/* Jump high enough to clear the obstacle */
+@keyframes jump {
+  0% {
+    bottom: 20px;
+  }
+  40% {
+    bottom: 140px; /* Jump high to clear obstacle */
+  }
+  60% {
+    bottom: 140px;
+  }
+  100% {
+    bottom: 20px;
+  }
+}
+
+/* Crash animation when hitting obstacle */
+@keyframes crash {
+  0% {
+    bottom: 20px;
+    transform: scaleX(-1) rotate(0deg);
+  }
+  30% {
+    bottom: 50px;
+    transform: scaleX(-1) rotate(-20deg);
+  }
+  60% {
+    bottom: 10px;
+    transform: scaleX(-1) rotate(10deg);
+  }
+  100% {
+    bottom: 20px;
+    transform: scaleX(-1) rotate(0deg);
+  }
+}
+
+.obstacle {
+  position: absolute;
+  bottom: 20px;
+  right: -200px;
+  font-size: 2em;
+  font-weight: bold;
+  background: #ff6b6b;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 15px;
+  opacity: 0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+
+.obstacle.show {
+  opacity: 1;
+  animation: slideLeft 3s linear forwards;
+}
+
+/* Obstacle moves from right to left across the screen */
+@keyframes slideLeft {
+  0% {
+    right: -200px;
+  }
+  100% {
+    right: calc(100% + 200px); /* Move completely off screen to the left */
+  }
+}
+
+/* Input Area */
+.input-area {
+  text-align: center;
+}
+
+.instruction {
+  font-size: 1.2em;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.word-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 15px 25px;
+  font-size: 1.5em;
+  border: 3px solid #667eea;
+  border-radius: 15px;
+  text-align: center;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.word-input:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+  transform: scale(1.02);
+}
+
+.word-input:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.error-message {
+  margin-top: 20px;
+  padding: 15px 25px;
+  background: #ff6b6b;
+  color: white;
+  border-radius: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+/* Game Over Screen */
+.game-over-title {
+  font-size: 3em;
+  text-align: center;
+  color: #764ba2;
+  margin-bottom: 30px;
+}
+
+.final-score-container {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.final-score-label {
+  font-size: 1.5em;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.final-score {
+  font-size: 4em;
+  color: #667eea;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.play-again-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 20px 50px;
+  font-size: 1.3em;
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #2d5a3d;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.play-again-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Debug (hidden by default) */
+.debug {
+  margin-top: 20px;
+  padding: 10px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .game-title {
+    font-size: 2em;
+  }
+
+  .difficulty-selector {
+    flex-direction: column;
+  }
+
+  .difficulty-btn {
+    width: 100%;
+  }
+
+  .game-area {
+    height: 150px;
+  }
+
+  .character {
+    font-size: 3em;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

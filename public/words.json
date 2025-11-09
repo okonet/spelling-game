@@ -1,0 +1,11 @@
+{
+  "easy": [
+    "hat", "cup", "pen", "box", "red", "blue"
+  ],
+  "medium": [
+    "rabbit", "orange", "purple", "yellow", "circle", "square"
+  ],
+  "hard": [
+    "kangaroo", "spectacular", "magnificent", "encyclopedia", "communication"
+  ]
+}

@@ -33,7 +33,12 @@ body {
 .stats-title {
   font-size: 2.5em;
   color: #667eea;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow:
+    1px 1px 0px #5a6fd4,
+    2px 2px 0px #4e5ec0,
+    3px 3px 0px #424dac,
+    4px 4px 0px #363c98,
+    5px 5px 10px rgba(0, 0, 0, 0.3);
 }
 
 .nav-btn {

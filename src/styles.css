@@ -97,9 +97,29 @@ body {
   transform: scale(1.02);
 }
 
-.view-stats-btn {
+.start-game-btn {
   display: block;
   margin: 30px auto 0;
+  padding: 20px 50px;
+  font-size: 1.3em;
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #2d5a3d;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.start-game-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.view-stats-btn {
+  display: block;
+  margin: 20px auto 0;
   padding: 15px 30px;
   font-size: 1.1em;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -264,8 +284,8 @@ body {
 
 /* Game Area */
 .game-area {
-  height: 200px;
-  background: linear-gradient(to bottom, #87ceeb 0%, #98d8c8 100%);
+  height: 250px;
+  background: linear-gradient(to bottom, #87ceeb 0%, #b8e6f0 70%, #d4f1f9 100%);
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -273,13 +293,209 @@ body {
   border: 4px solid #5dadb6;
 }
 
+/* Parallax Layers */
+.parallax-layer {
+  position: absolute;
+  width: 200%; /* Double width for seamless scrolling */
+  height: 100%;
+  pointer-events: none;
+}
+
+.parallax-sky {
+  z-index: 1;
+}
+
+.parallax-mountains {
+  z-index: 2;
+  bottom: 50px;
+  animation: parallaxSlow 60s linear infinite;
+}
+
+.parallax-trees {
+  z-index: 3;
+  bottom: 30px;
+  animation: parallaxMedium 30s linear infinite;
+}
+
+/* Parallax animations - different speeds for depth */
+@keyframes parallaxSlow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes parallaxMedium {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Clouds */
+.clouds {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cloud {
+  position: absolute;
+  font-size: 2em;
+  opacity: 0.7;
+  animation: floatCloud linear infinite;
+}
+
+.cloud-1 {
+  top: 10px;
+  left: 10%;
+  animation-duration: 45s;
+  animation-delay: 0s;
+}
+
+.cloud-2 {
+  top: 30px;
+  left: 50%;
+  animation-duration: 60s;
+  animation-delay: -20s;
+}
+
+.cloud-3 {
+  top: 5px;
+  left: 80%;
+  animation-duration: 50s;
+  animation-delay: -30s;
+}
+
+@keyframes floatCloud {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-120vw);
+  }
+}
+
+/* Mountains */
+.mountain {
+  position: absolute;
+  font-size: 4em;
+  opacity: 0.6;
+}
+
+.mountain-1 {
+  left: 5%;
+  bottom: 0;
+}
+
+.mountain-2 {
+  left: 35%;
+  bottom: 5px;
+}
+
+.mountain-3 {
+  left: 70%;
+  bottom: 0;
+}
+
+/* Duplicate mountains for seamless loop */
+.parallax-mountains::after {
+  content: '🏔️';
+  position: absolute;
+  left: 105%;
+  bottom: 0;
+  font-size: 4em;
+  opacity: 0.6;
+}
+
+.parallax-mountains::before {
+  content: '⛰️';
+  position: absolute;
+  left: 135%;
+  bottom: 5px;
+  font-size: 4em;
+  opacity: 0.6;
+}
+
+/* Trees */
+.tree {
+  position: absolute;
+  font-size: 2.5em;
+  bottom: 0;
+  opacity: 0.8;
+}
+
+.tree-1 {
+  left: 15%;
+}
+
+.tree-2 {
+  left: 40%;
+}
+
+.tree-3 {
+  left: 65%;
+}
+
+.tree-4 {
+  left: 85%;
+}
+
+/* Duplicate trees for seamless loop */
+.parallax-trees::after {
+  content: '🌲🌳🌲🌳';
+  position: absolute;
+  left: 100%;
+  bottom: 0;
+  font-size: 2.5em;
+  opacity: 0.8;
+  letter-spacing: 15vw;
+}
+
+/* Ground */
+.ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%; /* Double width for scrolling */
+  height: 35px;
+  background: linear-gradient(to bottom, #8bc34a 0%, #689f38 100%);
+  border-top: 3px solid #7cb342;
+  z-index: 4;
+  animation: parallaxFast 15s linear infinite;
+}
+
+@keyframes parallaxFast {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.grass {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 200%;
+  font-size: 1.2em;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
 .character {
   position: absolute;
-  bottom: 20px;
+  bottom: 35px; /* Positioned on ground */
   left: 100px;
   font-size: 4em;
   transform: scaleX(-1); /* Flip horizontally for left-to-right movement */
   animation: run 0.3s ease-in-out infinite; /* Continuous running animation */
+  z-index: 5;
 }
 
 .character.jumping {
@@ -293,62 +509,68 @@ body {
 /* Continuous running animation - slight bounce */
 @keyframes run {
   0%, 100% {
-    bottom: 20px;
+    bottom: 35px;
   }
   50% {
-    bottom: 25px;
+    bottom: 40px;
   }
 }
 
 /* Jump high enough to clear the obstacle */
 @keyframes jump {
   0% {
-    bottom: 20px;
+    bottom: 35px;
   }
   40% {
-    bottom: 140px; /* Jump high to clear obstacle */
+    bottom: 150px; /* Jump high to clear obstacle */
   }
   60% {
-    bottom: 140px;
+    bottom: 150px;
   }
   100% {
-    bottom: 20px;
+    bottom: 35px;
   }
 }
 
-/* Crash animation when hitting obstacle */
+/* Crash animation when hitting obstacle - more dramatic */
 @keyframes crash {
   0% {
-    bottom: 20px;
+    bottom: 35px;
     transform: scaleX(-1) rotate(0deg);
   }
-  30% {
-    bottom: 50px;
-    transform: scaleX(-1) rotate(-20deg);
+  20% {
+    bottom: 70px;
+    transform: scaleX(-1) rotate(-25deg);
   }
-  60% {
-    bottom: 10px;
-    transform: scaleX(-1) rotate(10deg);
+  40% {
+    bottom: 20px;
+    transform: scaleX(-1) rotate(15deg);
+  }
+  50% {
+    bottom: 35px;
+    transform: scaleX(-1) rotate(-10deg);
+  }
+  65% {
+    bottom: 25px;
+    transform: scaleX(-1) rotate(5deg);
+  }
+  80% {
+    bottom: 30px;
+    transform: scaleX(-1) rotate(-3deg);
   }
   100% {
-    bottom: 20px;
+    bottom: 35px;
     transform: scaleX(-1) rotate(0deg);
   }
 }
 
 .obstacle {
   position: absolute;
-  bottom: 20px;
+  bottom: 35px; /* On ground level */
   right: -200px;
-  font-size: 2em;
-  font-weight: bold;
-  background: #ff6b6b;
-  color: white;
-  padding: 15px 25px;
-  border-radius: 15px;
+  font-size: 3em;
   opacity: 0;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  white-space: nowrap;
+  z-index: 5;
 }
 
 .obstacle.show {
@@ -363,6 +585,98 @@ body {
   }
   100% {
     right: calc(100% + 200px); /* Move completely off screen to the left */
+  }
+}
+
+/* Speech Bubble */
+.speech-bubble {
+  position: absolute;
+  bottom: 145px;
+  left: 180px;
+  background: white;
+  border: 3px solid #333;
+  border-radius: 20px;
+  padding: 15px 20px;
+  max-width: 300px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  animation: bubblePop 0.3s ease;
+  z-index: 10;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 15px solid white;
+}
+
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 17px;
+  width: 0;
+  height: 0;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-top: 18px solid #333;
+  z-index: -1;
+}
+
+.speech-text {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #e74c3c;
+  text-align: center;
+}
+
+@keyframes bubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Ugh Text */
+.ugh-text {
+  position: absolute;
+  bottom: 135px;
+  left: 50px;
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #ff6b6b;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: ughPop 0.8s ease;
+  z-index: 10;
+}
+
+@keyframes ughPop {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.2);
+  }
+  60% {
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.8);
   }
 }
 
@@ -440,7 +754,7 @@ body {
 
 .final-score-container {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .final-score-label {
@@ -456,10 +770,68 @@ body {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.final-level {
+  font-size: 1.3em;
+  color: #999;
+  margin-top: 10px;
+}
+
+.session-comparison {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  border-radius: 20px;
+  padding: 20px 30px;
+  margin-bottom: 30px;
+}
+
+.comparison-title {
+  font-size: 1.5em;
+  color: #7d4a2e;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.comparison-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.stat-comparison-item {
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+
+.stat-comparison-label {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-comparison-value {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stat-comparison-current {
+  color: #2ecc71;
+}
+
+.stat-comparison-worse {
+  color: #e74c3c;
+}
+
+.game-over-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .play-again-btn {
-  display: block;
-  margin: 0 auto;
-  padding: 20px 50px;
+  padding: 20px 40px;
   font-size: 1.3em;
   background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
   color: #2d5a3d;
@@ -476,6 +848,59 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* Level Up Overlay */
+.level-up-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.level-up-content {
+  background: white;
+  border-radius: 30px;
+  padding: 60px 80px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.level-up-title {
+  font-size: 3.5em;
+  color: #667eea;
+  margin-bottom: 20px;
+  text-shadow:
+    1px 1px 0px #5a6fd4,
+    2px 2px 0px #4e5ec0,
+    3px 3px 0px #424dac,
+    4px 4px 0px #363c98,
+    5px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.level-up-message {
+  font-size: 2em;
+  color: #764ba2;
+  font-weight: bold;
+}
+
 /* Debug (hidden by default) */
 .debug {
   margin-top: 20px;
@@ -484,6 +909,125 @@ body {
   border-radius: 10px;
   font-size: 0.9em;
   color: #666;
+}
+
+/* Debug Panel */
+.debug-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #00ff00;
+  padding: 15px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  min-width: 350px;
+  max-width: 450px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  border: 2px solid #00ff00;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #00ff00;
+  color: #ffff00;
+}
+
+.debug-hint {
+  font-size: 0.8em;
+  color: #888;
+}
+
+.debug-info {
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.debug-info div {
+  margin: 3px 0;
+}
+
+.debug-label {
+  color: #00aaff;
+  display: inline-block;
+  width: 140px;
+}
+
+.debug-value {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.debug-warning {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+/* Debug Timeline */
+.debug-timeline {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #00ff00;
+}
+
+.debug-timeline-bar {
+  position: relative;
+  height: 30px;
+  background: #222;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid #444;
+}
+
+.debug-phase {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transition: width 0.1s linear;
+}
+
+.debug-phase-speaking {
+  left: 0;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  opacity: 0.7;
+}
+
+.debug-phase-typing {
+  background: linear-gradient(90deg, #84fab0, #8fd3f4);
+  opacity: 0.7;
+}
+
+.debug-marker {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: #ff6b6b;
+  box-shadow: 0 0 10px #ff6b6b;
+}
+
+.debug-jump-marker {
+  background: #ffff00;
+  box-shadow: 0 0 10px #ffff00;
+}
+
+.debug-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 0.75em;
+  color: #888;
+}
+
+#debug-timeline-current {
+  color: #00ff00;
+  font-weight: bold;
 }
 
 /* Responsive */

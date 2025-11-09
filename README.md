@@ -1,29 +1,41 @@
 # Spelling Game
 
-A browser-based educational game designed to help children learn English spelling through interactive gameplay and audio feedback.
+A browser-based educational game designed to help children learn English spelling through interactive gameplay, time pressure, and progressive difficulty.
 
 ## Game Concept
 
-The game presents an engaging way to practice spelling:
+The game presents an engaging way to practice spelling with time-based challenges:
 
 1. A word is spoken aloud using text-to-speech
-2. The player types the word they heard
-3. After pressing Enter, the typed word becomes an obstacle on screen
-4. A character runs continuously and attempts to jump over the obstacle
-5. **Correct spelling**: The character successfully jumps over, the player gets points and sees a confetti celebration
-6. **Incorrect spelling**: The character crashes into the obstacle, loses a life, and the correct spelling is shown
-7. After seeing the correct spelling, the player gets another chance to spell the word correctly
-8. The game continues until all 3 lives are lost
+2. An obstacle showing the word appears and starts moving toward the character
+3. The player must type the word correctly **before the obstacle reaches the character**
+4. **Correct spelling in time**: The character jumps over the obstacle, the player earns points and sees a confetti celebration
+5. **Incorrect spelling or timeout**: The character crashes, loses a life, and the correct spelling is shown
+6. The game continues until all 3 lives are lost
+
+## Progressive Difficulty System
+
+The game features an **automatic level progression system**:
+
+- **Start at Level 1** with easy words and 5 seconds per word
+- **Level up every 5 correct words** with celebration effects
+- **Speed increases** with each level (decreases by 300ms per level, minimum 2 seconds)
+- **Word difficulty increases** automatically:
+  - **Levels 1-3**: Easy words (3-4 letters)
+  - **Levels 4-6**: Medium words (5-6 letters)
+  - **Levels 7+**: Hard words (longer, complex words)
 
 ## Features
 
-- **Three difficulty levels**: Easy, Medium, and Hard with age-appropriate word lists
-- **Text-to-Speech**: Words are spoken aloud using the browser's Web Speech API with optimized clarity
-- **Continuous runner animation**: Character runs in place while obstacles slide from right to left
-- **Life system**: Start with 5 lives (❤️), lose one for each mistake (shown as 🖤)
-- **Retry mechanism**: See the correct spelling and get another chance after mistakes
-- **Score tracking**: Earn 10 points for each correct word
-- **Confetti celebration**: Animated celebration on successful jumps
+- **Level progression**: Automatic difficulty increase as you improve
+- **Time pressure**: Beat the clock to spell each word correctly
+- **Text-to-Speech**: Words are spoken aloud using the browser's Web Speech API with optimized clarity (rate: 0.6 for children)
+- **Continuous runner animation**: Character runs in place while obstacles approach from the right
+- **Life system**: Start with 3 lives (❤️), lose one for each mistake or timeout (shown as 🖤)
+- **Dynamic scoring**: Earn more points for fewer attempts (20/10/5/2 points)
+- **Level-up celebrations**: Cinematic effects with confetti and triumphant sound when reaching a new level
+- **Session tracking**: Track performance with player name, level progression, and detailed word-by-word results
+- **Statistics page**: View past game sessions, filter by player, and analyze progress
 - **Customizable word lists**: Easy to add your own words via JSON file
 
 ## Getting Started
@@ -66,18 +78,53 @@ npm run dev
 ```
 spelling-game/
 ├── src/
-│   ├── main.ts          # Application entry point
-│   ├── game.ts          # Core game logic and state management
-│   ├── audio.ts         # Web Speech API wrapper
-│   ├── words.ts         # Word management by difficulty
-│   ├── types.ts         # TypeScript type definitions
-│   └── styles.css       # All game styling and animations
+│   ├── main.ts           # Application entry point
+│   ├── game.ts           # Core game logic, level system, and timing
+│   ├── audio.ts          # Web Speech API wrapper
+│   ├── words.ts          # Word management by difficulty
+│   ├── sessionManager.ts # Player session tracking and localStorage
+│   ├── stats.ts          # Statistics page logic
+│   ├── types.ts          # TypeScript type definitions
+│   ├── styles.css        # Game styling and animations
+│   └── statsStyles.css   # Statistics page styling
 ├── public/
-│   └── words.json       # Custom word list (optional)
-├── index.html           # HTML structure
-├── vite.config.ts       # Vite configuration
-└── tsconfig.json        # TypeScript configuration
+│   └── words.json        # Custom word list (optional)
+├── index.html            # Main game HTML structure
+├── stats.html            # Statistics page HTML
+├── vite.config.ts        # Vite configuration
+└── tsconfig.json         # TypeScript configuration
 ```
+
+## Game Mechanics Details
+
+### Timing System
+
+The time available to spell each word decreases as you progress:
+- **Level 1**: 5000ms (5 seconds)
+- **Level 2**: 4700ms (4.7 seconds)
+- **Level 3**: 4400ms (4.4 seconds)
+- And so on... minimum 2000ms (2 seconds) at higher levels
+
+### Scoring System
+
+Points are awarded based on the number of attempts:
+- **First attempt**: 20 points
+- **Second attempt**: 10 points
+- **Third attempt**: 5 points
+- **More attempts**: 2 points per word
+- **Timeout**: 0 points and lose a life
+
+### Session Tracking
+
+All game sessions are saved to localStorage and include:
+- Player name and timestamp
+- Level progression during the session
+- Score and lives remaining
+- Complete word-by-word breakdown with:
+  - Each spelling attempt
+  - Time taken per word
+  - Whether the word timed out
+  - Level when the word was played
 
 ## Customizing Word Lists
 

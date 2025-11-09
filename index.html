@@ -10,6 +10,7 @@
     <!-- Start Screen -->
     <div id="start-screen" class="screen">
       <h1 class="game-title">🎮 Spelling Adventure!</h1>
+      <p class="subtitle">Beat the clock and progress through levels!</p>
       <div class="player-name-section">
         <label for="player-name" class="player-name-label">Enter your name:</label>
         <input
@@ -21,21 +22,7 @@
           maxlength="30"
         />
       </div>
-      <p class="subtitle">Choose your difficulty level:</p>
-      <div class="difficulty-selector">
-        <button class="difficulty-btn easy" data-difficulty="easy">
-          <span class="btn-icon">🌟</span>
-          <span class="btn-text">Easy</span>
-        </button>
-        <button class="difficulty-btn medium" data-difficulty="medium">
-          <span class="btn-icon">⭐</span>
-          <span class="btn-text">Medium</span>
-        </button>
-        <button class="difficulty-btn hard" data-difficulty="hard">
-          <span class="btn-icon">🌠</span>
-          <span class="btn-text">Hard</span>
-        </button>
-      </div>
+      <button id="start-game" class="start-game-btn">🚀 Start Game</button>
       <button id="view-stats" class="view-stats-btn">📊 View Statistics</button>
     </div>
 
@@ -47,6 +34,10 @@
           <span id="player-name-display" class="player-name-display"></span>
         </div>
         <div class="stats">
+          <div class="stat-item">
+            <span class="stat-label">Level:</span>
+            <span id="level" class="stat-value">1</span>
+          </div>
           <div class="stat-item">
             <span class="stat-label">Score:</span>
             <span id="score" class="stat-value">0</span>
@@ -63,7 +54,37 @@
       </div>
 
       <div class="game-area">
+        <!-- Parallax Background Layers -->
+        <div class="parallax-layer parallax-sky">
+          <div class="clouds">
+            <div class="cloud cloud-1">☁️</div>
+            <div class="cloud cloud-2">☁️</div>
+            <div class="cloud cloud-3">☁️</div>
+          </div>
+        </div>
+        <div class="parallax-layer parallax-mountains">
+          <div class="mountain mountain-1">🏔️</div>
+          <div class="mountain mountain-2">⛰️</div>
+          <div class="mountain mountain-3">🏔️</div>
+        </div>
+        <div class="parallax-layer parallax-trees">
+          <div class="tree tree-1">🌲</div>
+          <div class="tree tree-2">🌳</div>
+          <div class="tree tree-3">🌲</div>
+          <div class="tree tree-4">🌳</div>
+        </div>
+
+        <!-- Ground -->
+        <div class="ground">
+          <div class="grass">🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾</div>
+        </div>
+
+        <!-- Game Elements -->
         <div id="character" class="character">🏃</div>
+        <div id="speech-bubble" class="speech-bubble hidden">
+          <div id="speech-text" class="speech-text"></div>
+        </div>
+        <div id="ugh-text" class="ugh-text hidden">Ugh! 😵</div>
         <div id="obstacle" class="obstacle"></div>
       </div>
 
@@ -81,6 +102,27 @@
       </div>
 
       <div id="current-word" class="debug hidden"></div>
+
+      <!-- Debug Panel -->
+      <div id="debug-panel" class="debug-panel hidden">
+        <div class="debug-header">
+          <strong>🐛 Debug Mode</strong>
+          <span class="debug-hint">(Press 'D' to toggle)</span>
+        </div>
+        <div id="debug-info" class="debug-info"></div>
+        <div class="debug-timeline">
+          <div id="debug-timeline-bar" class="debug-timeline-bar">
+            <div id="debug-speaking" class="debug-phase debug-phase-speaking"></div>
+            <div id="debug-typing" class="debug-phase debug-phase-typing"></div>
+            <div id="debug-jump-point" class="debug-marker debug-jump-marker"></div>
+          </div>
+          <div class="debug-timeline-labels">
+            <span>Start</span>
+            <span id="debug-timeline-current">Current</span>
+            <span>Jump Point</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Game Over Screen -->
@@ -89,8 +131,26 @@
       <div class="final-score-container">
         <p class="final-score-label">Your Score:</p>
         <p id="final-score" class="final-score">0</p>
+        <p id="final-level" class="final-level">Level 1</p>
       </div>
-      <button id="play-again" class="play-again-btn">Play Again</button>
+
+      <div id="session-comparison" class="session-comparison">
+        <h3 class="comparison-title">Your Performance</h3>
+        <div id="comparison-stats" class="comparison-stats"></div>
+      </div>
+
+      <div class="game-over-buttons">
+        <button id="play-again" class="play-again-btn">🎮 Play Again</button>
+        <button id="view-stats-gameover" class="view-stats-btn">📊 View All Stats</button>
+      </div>
+    </div>
+
+    <!-- Level Up Overlay -->
+    <div id="level-up-overlay" class="level-up-overlay hidden">
+      <div class="level-up-content">
+        <h2 class="level-up-title">🎉 Level Up! 🎉</h2>
+        <p id="level-up-message" class="level-up-message">Level 2</p>
+      </div>
     </div>
   </div>
 

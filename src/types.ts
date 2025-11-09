@@ -18,6 +18,8 @@ export interface WordResult {
   scoreEarned: number;
   startTime: number;
   endTime: number;
+  level: number;
+  timedOut: boolean;
 }
 
 export interface PlayerSession {
@@ -43,6 +45,8 @@ export interface GameState {
   showCorrectSpelling: boolean;
   correctSpelling: string;
   playerName: string;
+  level: number;
+  wordsCompletedCorrectly: number;
 }
 
 export interface WordConfig {
@@ -51,4 +55,4 @@ export interface WordConfig {
   hard: string[];
 }
 
-export type GamePhase = 'idle' | 'speaking' | 'waiting-input' | 'validating' | 'jumping' | 'crashing' | 'game-over';
+export type GamePhase = 'idle' | 'speaking' | 'waiting-input' | 'validating' | 'jumping' | 'crashing' | 'game-over' | 'level-up';

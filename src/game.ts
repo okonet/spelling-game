@@ -274,6 +274,10 @@ export class SpellingGame {
     // Create new session
     this.sessionManager.createSession(playerName, 'easy');
 
+    // Initialize weighted word lists based on this player's performance history
+    const performanceMap = this.sessionManager.getWordPerformance(playerName);
+    this.wordManager.initializeSessionWords(performanceMap);
+
     this.elements.startScreen.classList.add('hidden');
     this.elements.gameScreen.classList.remove('hidden');
     this.elements.playerNameDisplay.textContent = playerName;
@@ -308,7 +312,7 @@ export class SpellingGame {
     this.state.difficulty = this.getDifficultyForLevel(this.state.level);
 
     this.phase = 'speaking';
-    this.state.currentWord = this.wordManager.getRandomWord(this.state.difficulty);
+    this.state.currentWord = this.wordManager.getNextWord(this.state.difficulty);
     this.state.currentWordAttempts = [];
     this.currentWordStartTime = Date.now();
     this.state.showCorrectSpelling = false;
@@ -582,6 +586,8 @@ export class SpellingGame {
     };
 
     this.sessionManager.addWordResult(wordResult);
+    // Update word performance history for adaptive learning (per player)
+    this.sessionManager.updateWordPerformance(this.state.playerName, wordResult);
   }
 
   private celebrate(): void {
@@ -734,6 +740,9 @@ export class SpellingGame {
     // End session
     this.sessionManager.endSession();
 
+    // Reset word manager session
+    this.wordManager.resetSession();
+
     this.elements.gameScreen.classList.add('hidden');
     this.elements.gameOverScreen.classList.remove('hidden');
     this.elements.finalScore.textContent = this.state.score.toString();
@@ -807,7 +816,7 @@ export class SpellingGame {
     this.elements.gameOverScreen.classList.add('hidden');
     this.elements.startScreen.classList.remove('hidden');
     this.phase = 'idle';
-    this.wordManager.resetUsedWords();
+    this.wordManager.resetSession();
     this.elements.playerNameInput.value = '';
   }
 
@@ -830,7 +839,7 @@ export class SpellingGame {
     this.elements.gameScreen.classList.add('hidden');
     this.elements.startScreen.classList.remove('hidden');
     this.phase = 'idle';
-    this.wordManager.resetUsedWords();
+    this.wordManager.resetSession();
     this.resetAnimations();
   }
 

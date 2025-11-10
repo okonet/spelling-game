@@ -29,13 +29,14 @@ The game features an **automatic level progression system**:
 
 - **Level progression**: Automatic difficulty increase as you improve
 - **Time pressure**: Beat the clock to spell each word correctly
+- **Adaptive learning system**: Words you struggle with appear more frequently until mastered (per-player tracking)
 - **Text-to-Speech**: Words are spoken aloud using the browser's Web Speech API with optimized clarity (rate: 0.6 for children)
 - **Continuous runner animation**: Character runs in place while obstacles approach from the right
 - **Life system**: Start with 3 lives (❤️), lose one for each mistake or timeout (shown as 🖤)
 - **Dynamic scoring**: Earn more points for fewer attempts (20/10/5/2 points)
 - **Level-up celebrations**: Cinematic effects with confetti and triumphant sound when reaching a new level
 - **Session tracking**: Track performance with player name, level progression, and detailed word-by-word results
-- **Statistics page**: View past game sessions, filter by player, and analyze progress
+- **Statistics page**: View past game sessions, player-specific progress charts, and analyze improvement
 - **Customizable word lists**: Easy to add your own words via JSON file
 
 ## Getting Started
@@ -125,6 +126,29 @@ All game sessions are saved to localStorage and include:
   - Time taken per word
   - Whether the word timed out
   - Level when the word was played
+
+### Adaptive Learning System
+
+The game uses an intelligent word selection algorithm that adapts to each player's performance:
+
+**Per-Player Tracking**: Each player has their own word performance history, so multiple children can use the game without affecting each other's learning progress.
+
+**Smart Prioritization**: Words are prioritized based on:
+- **Highest Priority**: Words with mistakes or timeouts (appear very frequently)
+- **High Priority**: Words never seen before
+- **Medium Priority**: Words with low success rate (<50%)
+- **Lower Priority**: Words spelled correctly on first try (appear less often)
+
+**Scoring System**:
+- Timeouts: +100 priority points (needs most practice)
+- Mistakes: +80 priority points (needs practice)
+- Correct first try: -30 priority points (mastered)
+- Low success rate: +50 bonus points
+- Not seen recently: +3-15 points per day
+
+This ensures struggling words are repeated frequently until mastered, maximizing learning efficiency.
+
+**Data Structure**: Designed for easy migration to a real database (IndexedDB or server-side) in the future.
 
 ## Customizing Word Lists
 

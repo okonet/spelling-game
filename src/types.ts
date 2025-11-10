@@ -56,3 +56,16 @@ export interface WordConfig {
 }
 
 export type GamePhase = 'idle' | 'speaking' | 'waiting-input' | 'validating' | 'jumping' | 'crashing' | 'game-over' | 'level-up';
+
+export interface WordPerformance {
+  word: string;
+  timesCorrectFirstTry: number;
+  timesMistakes: number;
+  timesTimeout: number;
+  totalAttempts: number;
+  lastSeen: number;
+}
+
+export interface WordPerformanceMap {
+  [word: string]: WordPerformance;
+}

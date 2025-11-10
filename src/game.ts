@@ -112,7 +112,7 @@ export class SpellingGame {
   }
 
   async initialize(): Promise<void> {
-    await this.wordManager.loadCustomWords();
+    await this.wordManager.loadWords();
   }
 
   private initializeEventListeners(): void {

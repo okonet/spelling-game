@@ -81,14 +81,14 @@ spelling-game/
 │   ├── main.ts           # Application entry point
 │   ├── game.ts           # Core game logic, level system, and timing
 │   ├── audio.ts          # Web Speech API wrapper
-│   ├── words.ts          # Word management by difficulty
+│   ├── words.ts          # Word loading and management
 │   ├── sessionManager.ts # Player session tracking and localStorage
 │   ├── stats.ts          # Statistics page logic
 │   ├── types.ts          # TypeScript type definitions
 │   ├── styles.css        # Game styling and animations
 │   └── statsStyles.css   # Statistics page styling
 ├── public/
-│   └── words.json        # Custom word list (optional)
+│   └── words.json        # All word lists (easy, medium, hard)
 ├── index.html            # Main game HTML structure
 ├── stats.html            # Statistics page HTML
 ├── vite.config.ts        # Vite configuration
@@ -128,22 +128,20 @@ All game sessions are saved to localStorage and include:
 
 ## Customizing Word Lists
 
-You can add your own words by editing `/public/words.json`:
+All words are stored in `/public/words.json`. You can customize the word lists by editing this file:
 
 ```json
 {
-  "easy": ["hat", "cup", "pen", "box"],
-  "medium": ["rabbit", "orange", "purple"],
-  "hard": ["kangaroo", "spectacular", "magnificent"]
+  "easy": ["cat", "dog", "sun", "bed", ...],
+  "medium": ["house", "table", "chair", "water", ...],
+  "hard": ["beautiful", "elephant", "mountain", ...]
 }
 ```
 
-These words are **merged** with the default word lists, so you only need to include additional words you want to add.
-
-Default word lists are defined in `src/words.ts` and include:
-- **Easy**: 20 simple 3-4 letter words (cat, dog, sun, etc.)
-- **Medium**: 20 common 5-6 letter words (house, table, friend, etc.)
-- **Hard**: 20 challenging words (beautiful, elephant, butterfly, etc.)
+The game includes:
+- **Easy**: 100+ simple words (3-4 letters) - nouns, verbs, and adjectives
+- **Medium**: 100+ intermediate words (5-7 letters) - diverse vocabulary
+- **Hard**: 180+ challenging words - commonly misspelled words and advanced vocabulary
 
 ## Technologies Used
 

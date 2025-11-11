@@ -54,8 +54,6 @@ export class SpellingGame {
     speedBonus: HTMLElement;
     speedTierText: HTMLElement;
     speedMultiplierText: HTMLElement;
-    comboIndicator: HTMLElement;
-    comboCount: HTMLElement;
   };
 
   constructor() {
@@ -115,9 +113,7 @@ export class SpellingGame {
       debugJumpPoint: document.getElementById('debug-jump-point')!,
       speedBonus: document.getElementById('speed-bonus')!,
       speedTierText: document.getElementById('speed-tier-text')!,
-      speedMultiplierText: document.getElementById('speed-multiplier-text')!,
-      comboIndicator: document.getElementById('combo-indicator')!,
-      comboCount: document.getElementById('combo-count')!
+      speedMultiplierText: document.getElementById('speed-multiplier-text')!
     };
 
     this.initializeEventListeners();
@@ -418,7 +414,6 @@ export class SpellingGame {
 
     // Reset combo on timeout
     this.state.comboCount = 0;
-    this.updateComboDisplay();
 
     // Play crash animation and sound
     this.elements.character.classList.add('crashing');
@@ -445,6 +440,14 @@ export class SpellingGame {
 
     // Hide speech bubble
     this.elements.speechBubble.classList.add('hidden');
+
+    // Wait for obstacle to finish sliding off screen before reset
+    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const elapsedTotal = Date.now() - this.obstacleStartTime;
+    const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
+    if (remainingObstacleTime > 0) {
+      await this.delay(remainingObstacleTime);
+    }
 
     // Check if game over
     if (this.state.lives <= 0) {
@@ -504,32 +507,37 @@ export class SpellingGame {
     }
   }
 
-  private showSpeedFeedback(tier: SpeedTier, speedMultiplier: number, comboMultiplier: number, basePoints: number, finalPoints: number): void {
+  private showSpeedFeedback(tier: SpeedTier, speedMultiplier: number, comboMultiplier: number, finalPoints: number): void {
     // Show different messages based on speed tier
     const tierMessages = {
-      lightning: '⚡ LIGHTNING FAST! ⚡',
+      lightning: '⚡ LIGHTNING FAST!',
       fast: '🚀 FAST!',
       good: '👍 GOOD SPEED!',
       normal: '✓ CORRECT!'
     };
 
     const tierText = tierMessages[tier];
-    let multiplierText = '';
-
     const totalMultiplier = speedMultiplier * comboMultiplier;
 
+    // Build compact multiplier display with emojis
+    let multiplierText = '';
     if (totalMultiplier > 1.0) {
       const parts = [];
       if (speedMultiplier > 1.0) {
-        parts.push(`Speed ${speedMultiplier}×`);
+        parts.push(`⚡${speedMultiplier}×`);
       }
       if (comboMultiplier > 1.0) {
-        parts.push(`Combo ${comboMultiplier}×`);
+        parts.push(`🔥${comboMultiplier}×`);
       }
-      const bonusText = parts.join(' + ');
-      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}× BONUS!\n${basePoints} → ${finalPoints} points!`;
+      const bonusText = parts.join(' · ');
+
+      // Show combo count if active
+      const comboCount = this.state.comboCount > 1 ? ` (${this.state.comboCount} combo)` : '';
+
+      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}× BONUS${comboCount}\n+${finalPoints} pts`;
     } else {
-      multiplierText = `+${finalPoints} points!`;
+      const comboCount = this.state.comboCount > 1 ? ` 🔥${this.state.comboCount}` : '';
+      multiplierText = `+${finalPoints} pts${comboCount}`;
     }
 
     this.elements.speedTierText.textContent = tierText;
@@ -538,19 +546,49 @@ export class SpellingGame {
     this.elements.speedBonus.setAttribute('data-tier', tier); // For CSS styling
   }
 
-  private updateComboDisplay(): void {
-    if (this.state.comboCount >= 2) {
-      this.elements.comboIndicator.classList.remove('hidden');
-      this.elements.comboCount.textContent = this.state.comboCount.toString();
+  private async animatePointsToScore(points: number): Promise<void> {
+    // Get speed feedback display position (source of points)
+    const feedbackRect = this.elements.speedBonus.getBoundingClientRect();
+    const feedbackX = (feedbackRect.left + feedbackRect.width / 2) / window.innerWidth;
+    const feedbackY = (feedbackRect.top + feedbackRect.height / 2) / window.innerHeight;
 
-      // Add animation class for visual feedback
-      this.elements.comboIndicator.classList.add('combo-pulse');
-      setTimeout(() => {
-        this.elements.comboIndicator.classList.remove('combo-pulse');
-      }, 300);
-    } else {
-      this.elements.comboIndicator.classList.add('hidden');
-    }
+    // Get score display position (target)
+    const scoreRect = this.elements.scoreDisplay.getBoundingClientRect();
+    const scoreX = (scoreRect.left + scoreRect.width / 2) / window.innerWidth;
+    const scoreY = (scoreRect.top + scoreRect.height / 2) / window.innerHeight;
+
+    // Calculate angle from feedback to score
+    // Confetti angle: 90 = up, 0 = right, 180 = left, 270 = down
+    const deltaX = scoreX - feedbackX;
+    const deltaY = scoreY - feedbackY;
+    // Convert from standard atan2 to confetti's angle system
+    const mathAngle = Math.atan2(-deltaY, deltaX) * 180 / Math.PI; // Negate Y because screen coords
+    const angle = mathAngle + 90; // Rotate to confetti's coordinate system
+
+    // Determine number of particles based on points (more points = more particles)
+    const particleCount = Math.max(Math.floor(points), 2);
+
+    // Animate particles from feedback display to score
+    const duration = 1200; // Animation duration in ms
+    confetti({
+      particleCount,
+      startVelocity: 10,
+      spread: 40,
+      angle,
+      origin: {
+        x: feedbackX,
+        y: feedbackY
+      },
+      gravity: -1,
+      scalar: 1.2,
+      ticks: duration / 16.67, // Convert ms to frames (60fps)
+      shapes: ['circle'],
+      colors: ['#FFD700', '#FFA500', '#FF6347', '#87CEEB'],
+      disableForReducedMotion: true
+    });
+
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, duration));
   }
 
   private async handleCorrectAnswer(): Promise<void> {
@@ -580,49 +618,55 @@ export class SpellingGame {
     const totalMultiplier = speedMultiplier * comboMultiplier;
     const finalPoints = Math.round(basePoints * totalMultiplier);
 
-    // DON'T update score display yet - wait until after jump!
+    // DON'T update score display yet - wait until after animation!
     this.state.wordsCompletedCorrectly += 1;
 
-    // Update combo display
-    this.updateComboDisplay();
+    // Play success sound and show score feedback immediately
+    this.playTadaSound();
+    this.showSpeedFeedback(tier, speedMultiplier, comboMultiplier, finalPoints);
 
-    // Show speed tier feedback BEFORE the jump
-    this.showSpeedFeedback(tier, speedMultiplier, comboMultiplier, basePoints, finalPoints);
-
-    // Calculate delay until obstacle reaches character (fast-forward by 60%)
+    // Calculate delay until obstacle reaches character
     const elapsedSinceObstacle = Date.now() - this.obstacleStartTime;
-    let jumpDelay = obstacleReachTime - elapsedSinceObstacle;
+    const jumpDelay = obstacleReachTime - elapsedSinceObstacle;
 
-    // Fast-forward: reduce wait time by 60% but keep minimum for visual satisfaction
-    if (jumpDelay > 0) {
-      jumpDelay = Math.max(jumpDelay * 0.4, 100); // 40% of original time, min 100ms
-    }
-
-    // Wait for (fast-forwarded) obstacle to reach character, then jump
+    // Wait for obstacle to reach character, then jump
     if (jumpDelay > 0) {
       await this.delay(jumpDelay);
     }
 
     this.elements.character.classList.add('jumping');
 
-    // Hide speed feedback when jumping
-    this.elements.speedBonus.classList.add('hidden');
+    // Keep score feedback on screen to read it
+    await this.delay(1000);
 
-    // NOW update the score during/after the jump
+    // Animate particles flying to score display
+    const animationPromise = this.animatePointsToScore(finalPoints);
+
+    // Update the score (particles will fly while score updates)
     this.state.score += finalPoints;
     this.updateDisplay();
     this.sessionManager.updateSessionScore(this.state.score);
 
-    // Celebration
-    this.celebrate();
+    // Wait for animation to complete
+    await animationPromise;
+
+    // Hide speed feedback
+    this.elements.speedBonus.classList.add('hidden');
+
+    // Calculate how much time is left for obstacle to slide off screen
+    // The obstacle animation takes 'speed' ms total, started at obstacleStartTime
+    const elapsedTotal = Date.now() - this.obstacleStartTime;
+    const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
 
     // Wait for obstacle to finish sliding off screen
-    await this.delay(900);
+    if (remainingObstacleTime > 0) {
+      await this.delay(remainingObstacleTime);
+    }
 
     // Check for level up (every 5 correct words)
     const shouldLevelUp = this.state.wordsCompletedCorrectly % 5 === 0;
 
-    // Reset and continue
+    // Reset and continue (now obstacle is definitely off-screen)
     this.resetAnimations();
 
     if (shouldLevelUp) {
@@ -637,7 +681,6 @@ export class SpellingGame {
 
     // Reset combo on incorrect answer
     this.state.comboCount = 0;
-    this.updateComboDisplay();
 
     // Calculate delay until obstacle reaches character
     const speed = this.getObstacleSpeedForLevel(this.state.level);
@@ -676,6 +719,13 @@ export class SpellingGame {
 
     // Hide speech bubble
     this.elements.speechBubble.classList.add('hidden');
+
+    // Wait for obstacle to finish sliding off screen before reset
+    const elapsedTotal = Date.now() - this.obstacleStartTime;
+    const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
+    if (remainingObstacleTime > 0) {
+      await this.delay(remainingObstacleTime);
+    }
 
     // Check if game over
     if (this.state.lives <= 0) {
@@ -781,15 +831,6 @@ export class SpellingGame {
     this.sessionManager.addWordResult(wordResult);
     // Update word performance history for adaptive learning (per player)
     this.sessionManager.updateWordPerformance(this.state.playerName, wordResult);
-  }
-
-  private celebrate(): void {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-    this.playTadaSound();
   }
 
   private async levelUp(): Promise<void> {

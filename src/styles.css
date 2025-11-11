@@ -727,44 +727,6 @@ body {
   }
 }
 
-/* Combo Indicator */
-.combo-indicator {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-  border-radius: 10px;
-  padding: 5px 15px;
-  animation: comboAppear 0.3s ease;
-}
-
-.combo-value {
-  font-size: 1.3em !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-.combo-pulse {
-  animation: comboPulse 0.3s ease;
-}
-
-@keyframes comboAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes comboPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.15);
-  }
-}
-
 @keyframes ughPop {
   0% {
     opacity: 0;

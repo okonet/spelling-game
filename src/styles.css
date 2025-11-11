@@ -308,16 +308,15 @@ body {
 .parallax-mountains {
   z-index: 2;
   bottom: 0; /* Sits on top of the ground */
-    zoom: 2;
-    opacity: 0.5;
+  zoom: 2;
+  opacity: 0.5;
   animation: parallaxSlow 60s linear infinite;
 }
 
 .parallax-trees {
   z-index: 3;
   bottom: 15px; /* Sits on top of the ground */
-    zoom: 2;
-    opacity: 0.75;
+  zoom: 2;
   animation: parallaxMedium 30s linear infinite;
 }
 
@@ -515,7 +514,8 @@ body {
 
 /* Continuous running animation - slight bounce */
 @keyframes run {
-  0%, 100% {
+  0%,
+  100% {
     bottom: 35px;
   }
   50% {
@@ -600,8 +600,7 @@ body {
 .speech-bubble {
   position: absolute;
   bottom: 165px; /* Above character (char at 35px + ~100px character height + 30px margin) */
-  left: 100px; /* Aligned with character position */
-  transform: translateX(-20%); /* Offset slightly to the left of character */
+  left: 20px; /* Positioned to the left of character */
   background: white;
   border: 3px solid #333;
   border-radius: 20px;
@@ -616,7 +615,7 @@ body {
   content: '';
   position: absolute;
   bottom: -15px;
-  left: 20%; /* Arrow points to character */
+  left: 110px; /* Fixed position pointing to character center (~132px from screen edge) */
   width: 0;
   height: 0;
   border-left: 15px solid transparent;
@@ -628,7 +627,7 @@ body {
   content: '';
   position: absolute;
   bottom: -20px;
-  left: calc(20% - 3px); /* Arrow points to character, accounting for border */
+  left: 107px; /* Fixed position, accounting for border (110px - 3px) */
   width: 0;
   height: 0;
   border-left: 18px solid transparent;
@@ -647,14 +646,14 @@ body {
 @keyframes bubblePop {
   0% {
     opacity: 0;
-    transform: translateX(-20%) scale(0.5);
+    transform: scale(0.5);
   }
   50% {
-    transform: translateX(-20%) scale(1.1);
+    transform: scale(1.1);
   }
   100% {
     opacity: 1;
-    transform: translateX(-20%) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -696,20 +695,20 @@ body {
 }
 
 /* Different colors for different speed tiers */
-.speed-bonus[data-tier="lightning"] .speed-tier-text {
+.speed-bonus[data-tier='lightning'] .speed-tier-text {
   color: #ffd700;
   animation: lightningPulse 0.3s ease infinite;
 }
 
-.speed-bonus[data-tier="fast"] .speed-tier-text {
-  color: #4CAF50;
+.speed-bonus[data-tier='fast'] .speed-tier-text {
+  color: #4caf50;
 }
 
-.speed-bonus[data-tier="good"] .speed-tier-text {
-  color: #2196F3;
+.speed-bonus[data-tier='good'] .speed-tier-text {
+  color: #2196f3;
 }
 
-.speed-bonus[data-tier="normal"] .speed-tier-text {
+.speed-bonus[data-tier='normal'] .speed-tier-text {
   color: #666;
 }
 
@@ -728,7 +727,8 @@ body {
 }
 
 @keyframes lightningPulse {
-  0%, 100% {
+  0%,
+  100% {
     filter: brightness(1);
   }
   50% {
@@ -801,7 +801,8 @@ body {
 }
 
 @keyframes shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   25% {

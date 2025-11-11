@@ -1,0 +1,381 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { WordManager } from './words';
+import type { WordPerformanceMap } from './types';
+
+describe('WordManager', () => {
+  let wordManager: WordManager;
+
+  beforeEach(() => {
+    wordManager = new WordManager();
+  });
+
+  describe('Priority Scoring Algorithm', () => {
+    it('should give highest priority (1000) to words never seen before', () => {
+      const performanceMap: WordPerformanceMap = {};
+
+      // @ts-ignore - accessing private method for testing
+      const score = wordManager['calculatePriorityScore']('cat', performanceMap);
+
+      expect(score).toBe(1000);
+    });
+
+    it('should heavily prioritize words with timeouts (+100 per timeout)', () => {
+      const performanceMap: WordPerformanceMap = {
+        'difficult': {
+          word: 'difficult',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 0,
+          timesTimeout: 2,
+          totalAttempts: 2,
+          lastSeen: Date.now()
+        }
+      };
+
+      // @ts-ignore
+      const score = wordManager['calculatePriorityScore']('difficult', performanceMap);
+
+      // Base: 100, Timeouts: +200 (2 * 100), Low success rate: +50 = 350
+      expect(score).toBe(350);
+    });
+
+    it('should heavily prioritize words with mistakes (+80 per mistake)', () => {
+      const performanceMap: WordPerformanceMap = {
+        'tricky': {
+          word: 'tricky',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 3,
+          timesTimeout: 0,
+          totalAttempts: 3,
+          lastSeen: Date.now()
+        }
+      };
+
+      // @ts-ignore
+      const score = wordManager['calculatePriorityScore']('tricky', performanceMap);
+
+      // Base: 100, Mistakes: +240 (3 * 80), Low success rate: +50 = 390
+      expect(score).toBe(390);
+    });
+
+    it('should penalize mastered words (-30 per correct first try)', () => {
+      const performanceMap: WordPerformanceMap = {
+        'easy': {
+          word: 'easy',
+          timesCorrectFirstTry: 5,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 5,
+          lastSeen: Date.now()
+        }
+      };
+
+      // @ts-ignore
+      const score = wordManager['calculatePriorityScore']('easy', performanceMap);
+
+      // Base: 100, Correct: -150 (5 * 30) = -50, but minimum is 0
+      expect(score).toBe(0);
+    });
+
+    it('should boost priority (+50) for words with low success rate (<50%)', () => {
+      const performanceMap: WordPerformanceMap = {
+        'struggling': {
+          word: 'struggling',
+          timesCorrectFirstTry: 1,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 3,
+          lastSeen: Date.now()
+        }
+      };
+
+      // @ts-ignore
+      const score = wordManager['calculatePriorityScore']('struggling', performanceMap);
+
+      // Base: 100, Correct: -30, Low success rate: +50 = 120
+      expect(score).toBe(120);
+    });
+
+    it('should slightly boost priority for words not seen recently (+3 per day, max +15)', () => {
+      const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
+      const performanceMap: WordPerformanceMap = {
+        'forgotten': {
+          word: 'forgotten',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 0,
+          lastSeen: threeDaysAgo
+        }
+      };
+
+      // @ts-ignore
+      const score = wordManager['calculatePriorityScore']('forgotten', performanceMap);
+
+      // Base: 100, Recency: +9 (3 days * 3) = 109 (approximately due to floating point)
+      expect(score).toBeCloseTo(109, 0);
+    });
+
+    it('should demonstrate combined scoring: mistakes are highest priority', () => {
+      const performanceMap: WordPerformanceMap = {
+        'timeout-word': {
+          word: 'timeout-word',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 0,
+          timesTimeout: 3,
+          totalAttempts: 3,
+          lastSeen: Date.now()
+        },
+        'mistake-word': {
+          word: 'mistake-word',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 3,
+          timesTimeout: 0,
+          totalAttempts: 3,
+          lastSeen: Date.now()
+        },
+        'mastered-word': {
+          word: 'mastered-word',
+          timesCorrectFirstTry: 10,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 10,
+          lastSeen: Date.now()
+        }
+      };
+
+      // @ts-ignore
+      const timeoutScore = wordManager['calculatePriorityScore']('timeout-word', performanceMap);
+      // @ts-ignore
+      const mistakeScore = wordManager['calculatePriorityScore']('mistake-word', performanceMap);
+      // @ts-ignore
+      const masteredScore = wordManager['calculatePriorityScore']('mastered-word', performanceMap);
+
+      // Timeout: 100 + 300 (3 * 100) + 50 (low success rate) = 450
+      expect(timeoutScore).toBe(450);
+      // Mistakes: 100 + 240 (3 * 80) + 50 (low success rate) = 390
+      expect(mistakeScore).toBe(390);
+      // Mastered: 100 - 300 (10 * 30) = 0 (minimum)
+      expect(masteredScore).toBe(0);
+
+      // Timeouts should have highest priority
+      expect(timeoutScore).toBeGreaterThan(mistakeScore);
+      expect(mistakeScore).toBeGreaterThan(masteredScore);
+    });
+  });
+
+  describe('Weighted Shuffling', () => {
+    it('should create shuffled word lists prioritizing struggling words', () => {
+      // Mock word data
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat', 'dog', 'sun', 'bed', 'car'],
+        medium: [],
+        hard: []
+      };
+
+      const performanceMap: WordPerformanceMap = {
+        'cat': {
+          word: 'cat',
+          timesCorrectFirstTry: 5,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 5,
+          lastSeen: Date.now()
+        },
+        'dog': {
+          word: 'dog',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 3,
+          timesTimeout: 0,
+          totalAttempts: 3,
+          lastSeen: Date.now()
+        },
+        'sun': {
+          word: 'sun',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 0,
+          timesTimeout: 2,
+          totalAttempts: 2,
+          lastSeen: Date.now()
+        }
+        // 'bed' and 'car' never seen (priority 1000 each)
+      };
+
+      wordManager.initializeSessionWords(performanceMap);
+
+      // Get words in order
+      const words = [];
+      for (let i = 0; i < 5; i++) {
+        words.push(wordManager.getNextWord('easy').text);
+      }
+
+      // Calculate priority scores to determine expected order
+      // @ts-ignore
+      const catScore = wordManager['calculatePriorityScore']('cat', performanceMap);
+      // @ts-ignore
+      const dogScore = wordManager['calculatePriorityScore']('dog', performanceMap);
+      // @ts-ignore
+      const sunScore = wordManager['calculatePriorityScore']('sun', performanceMap);
+      // @ts-ignore
+      const bedScore = wordManager['calculatePriorityScore']('bed', performanceMap);
+      // @ts-ignore
+      const carScore = wordManager['calculatePriorityScore']('car', performanceMap);
+
+      // Verify that mastered word (cat) has lowest score
+      expect(catScore).toBeLessThan(dogScore);
+      expect(catScore).toBeLessThan(sunScore);
+      expect(catScore).toBeLessThan(bedScore);
+      expect(catScore).toBeLessThan(carScore);
+
+      // Verify all words are included
+      expect(words).toContain('cat');
+      expect(words).toContain('dog');
+      expect(words).toContain('sun');
+      expect(words).toContain('bed');
+      expect(words).toContain('car');
+
+      // Due to bucketing and shuffling, we can't predict exact order,
+      // but we can verify that mastered word doesn't appear first
+      expect(words[0]).not.toBe('cat');
+    });
+
+    it('should loop back to start when all words are used', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat', 'dog'],
+        medium: [],
+        hard: []
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const firstWord = wordManager.getNextWord('easy').text;
+      wordManager.getNextWord('easy'); // Get second word
+      const thirdWord = wordManager.getNextWord('easy').text;
+
+      // Third word should be same as first (looped back)
+      expect(thirdWord).toBe(firstWord);
+    });
+  });
+
+  describe('Session Management', () => {
+    it('should initialize separate word lists for each difficulty', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat', 'dog'],
+        medium: ['house', 'table'],
+        hard: ['beautiful', 'elephant']
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const easyWord = wordManager.getNextWord('easy');
+      const mediumWord = wordManager.getNextWord('medium');
+      const hardWord = wordManager.getNextWord('hard');
+
+      expect(['cat', 'dog']).toContain(easyWord.text);
+      expect(['house', 'table']).toContain(mediumWord.text);
+      expect(['beautiful', 'elephant']).toContain(hardWord.text);
+    });
+
+    it('should reset session and clear word lists', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat', 'dog'],
+        medium: [],
+        hard: []
+      };
+
+      wordManager.initializeSessionWords({});
+      wordManager.getNextWord('easy');
+
+      wordManager.resetSession();
+
+      // After reset, session lists should be cleared
+      expect(() => wordManager.getNextWord('easy')).toThrow();
+    });
+  });
+
+  describe('Real-world Scenario: Learning Journey', () => {
+    it('should demonstrate adaptive learning over multiple sessions', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat', 'dog', 'sun'],
+        medium: [],
+        hard: []
+      };
+
+      // Session 1: First time playing
+      const session1Performance: WordPerformanceMap = {};
+      wordManager.initializeSessionWords(session1Performance);
+
+      const session1Words = [
+        wordManager.getNextWord('easy').text,
+        wordManager.getNextWord('easy').text,
+        wordManager.getNextWord('easy').text
+      ];
+
+      // All words should appear (all have priority 1000)
+      expect(session1Words).toContain('cat');
+      expect(session1Words).toContain('dog');
+      expect(session1Words).toContain('sun');
+
+      // Session 2: Player struggled with 'dog'
+      const session2Performance: WordPerformanceMap = {
+        'cat': {
+          word: 'cat',
+          timesCorrectFirstTry: 1,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 1,
+          lastSeen: Date.now()
+        },
+        'dog': {
+          word: 'dog',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 1,
+          timesTimeout: 0,
+          totalAttempts: 1,
+          lastSeen: Date.now()
+        },
+        'sun': {
+          word: 'sun',
+          timesCorrectFirstTry: 1,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 1,
+          lastSeen: Date.now()
+        }
+      };
+
+      wordManager.resetSession();
+      wordManager.initializeSessionWords(session2Performance);
+
+      const session2Words = [
+        wordManager.getNextWord('easy').text,
+        wordManager.getNextWord('easy').text,
+        wordManager.getNextWord('easy').text
+      ];
+
+      // Calculate priority scores to verify 'dog' has highest priority
+      // @ts-ignore
+      const catScore = wordManager['calculatePriorityScore']('cat', session2Performance);
+      // @ts-ignore
+      const dogScore = wordManager['calculatePriorityScore']('dog', session2Performance);
+      // @ts-ignore
+      const sunScore = wordManager['calculatePriorityScore']('sun', session2Performance);
+
+      // 'dog' should have highest priority (mistake penalty)
+      expect(dogScore).toBeGreaterThan(catScore);
+      expect(dogScore).toBeGreaterThan(sunScore);
+
+      // All words should appear
+      expect(session2Words).toContain('cat');
+      expect(session2Words).toContain('dog');
+      expect(session2Words).toContain('sun');
+
+      // Due to bucketing with only 3 words, exact order isn't guaranteed
+      // but 'dog' should appear earlier than both mastered words on average
+    });
+  });
+});

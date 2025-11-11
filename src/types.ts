@@ -11,11 +11,18 @@ export interface WordAttempt {
   timestamp: number;
 }
 
+export type SpeedTier = 'lightning' | 'fast' | 'good' | 'normal';
+
 export interface WordResult {
   word: string;
   difficulty: Difficulty;
   attempts: WordAttempt[];
   scoreEarned: number;
+  speedMultiplier: number;
+  speedTier: SpeedTier;
+  comboMultiplier: number;
+  comboCount: number;
+  responseTime: number; // Time from obstacle start to answer (ms)
   startTime: number;
   endTime: number;
   level: number;
@@ -47,6 +54,7 @@ export interface GameState {
   playerName: string;
   level: number;
   wordsCompletedCorrectly: number;
+  comboCount: number; // Consecutive correct answers (first try only)
 }
 
 export interface WordConfig {
@@ -56,3 +64,16 @@ export interface WordConfig {
 }
 
 export type GamePhase = 'idle' | 'speaking' | 'waiting-input' | 'validating' | 'jumping' | 'crashing' | 'game-over' | 'level-up';
+
+export interface WordPerformance {
+  word: string;
+  timesCorrectFirstTry: number;
+  timesMistakes: number;
+  timesTimeout: number;
+  totalAttempts: number;
+  lastSeen: number;
+}
+
+export interface WordPerformanceMap {
+  [word: string]: WordPerformance;
+}

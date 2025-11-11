@@ -31,7 +31,7 @@ export class AudioManager {
        voice.name.includes('Alex'))
     );
 
-    if (premiumVoice) {
+      if (premiumVoice) {
       console.log('Using voice:', premiumVoice.name);
       return premiumVoice;
     }
@@ -67,7 +67,7 @@ export class AudioManager {
       }
 
       // Speak slowly and clearly for children
-      utterance.rate = 0.6; // Slower for better clarity
+      utterance.rate = 1; // Slower for better clarity
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
 

@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import type { GameState, GamePhase, Difficulty, WordAttempt, WordResult } from './types';
+import type { GameState, GamePhase, Difficulty, WordAttempt, WordResult, SpeedTier } from './types';
 import { WordManager } from './words';
 import { AudioManager } from './audio';
 import { SessionManager } from './sessionManager';
@@ -12,6 +12,7 @@ export class SpellingGame {
   private phase: GamePhase = 'idle';
   private currentWordStartTime: number = 0;
   private obstacleStartTime: number = 0;
+  private answerSubmitTime: number = 0;
   private obstacleTimeoutId: number | null = null;
   private debugMode: boolean = false;
   private debugUpdateInterval: number | null = null;
@@ -50,6 +51,9 @@ export class SpellingGame {
     debugSpeaking: HTMLElement;
     debugTyping: HTMLElement;
     debugJumpPoint: HTMLElement;
+    speedBonus: HTMLElement;
+    speedTierText: HTMLElement;
+    speedMultiplierText: HTMLElement;
   };
 
   constructor() {
@@ -70,7 +74,8 @@ export class SpellingGame {
       correctSpelling: '',
       playerName: '',
       level: 1,
-      wordsCompletedCorrectly: 0
+      wordsCompletedCorrectly: 0,
+      comboCount: 0
     };
 
     this.elements = {
@@ -105,14 +110,17 @@ export class SpellingGame {
       debugTimelineBar: document.getElementById('debug-timeline-bar')!,
       debugSpeaking: document.getElementById('debug-speaking')!,
       debugTyping: document.getElementById('debug-typing')!,
-      debugJumpPoint: document.getElementById('debug-jump-point')!
+      debugJumpPoint: document.getElementById('debug-jump-point')!,
+      speedBonus: document.getElementById('speed-bonus')!,
+      speedTierText: document.getElementById('speed-tier-text')!,
+      speedMultiplierText: document.getElementById('speed-multiplier-text')!
     };
 
     this.initializeEventListeners();
   }
 
   async initialize(): Promise<void> {
-    await this.wordManager.loadCustomWords();
+    await this.wordManager.loadWords();
   }
 
   private initializeEventListeners(): void {
@@ -274,6 +282,10 @@ export class SpellingGame {
     // Create new session
     this.sessionManager.createSession(playerName, 'easy');
 
+    // Initialize weighted word lists based on this player's performance history
+    const performanceMap = this.sessionManager.getWordPerformance(playerName);
+    this.wordManager.initializeSessionWords(performanceMap);
+
     this.elements.startScreen.classList.add('hidden');
     this.elements.gameScreen.classList.remove('hidden');
     this.elements.playerNameDisplay.textContent = playerName;
@@ -308,7 +320,7 @@ export class SpellingGame {
     this.state.difficulty = this.getDifficultyForLevel(this.state.level);
 
     this.phase = 'speaking';
-    this.state.currentWord = this.wordManager.getRandomWord(this.state.difficulty);
+    this.state.currentWord = this.wordManager.getNextWord(this.state.difficulty);
     this.state.currentWordAttempts = [];
     this.currentWordStartTime = Date.now();
     this.state.showCorrectSpelling = false;
@@ -363,6 +375,9 @@ export class SpellingGame {
     this.phase = 'validating';
     this.elements.wordInput.disabled = true;
 
+    // Record the time when answer was submitted (for speed calculation)
+    this.answerSubmitTime = Date.now();
+
     // Clear obstacle timeout since user submitted
     this.clearObstacleTimeout();
 
@@ -370,7 +385,7 @@ export class SpellingGame {
     const attempt: WordAttempt = {
       spelling: userAnswer,
       correct: userAnswer === correctAnswer,
-      timestamp: Date.now()
+      timestamp: this.answerSubmitTime
     };
     this.state.currentWordAttempts.push(attempt);
 
@@ -396,6 +411,9 @@ export class SpellingGame {
     this.phase = 'crashing';
     this.clearObstacleTimeout();
     this.elements.wordInput.disabled = true;
+
+    // Reset combo on timeout
+    this.state.comboCount = 0;
 
     // Play crash animation and sound
     this.elements.character.classList.add('crashing');
@@ -423,6 +441,14 @@ export class SpellingGame {
     // Hide speech bubble
     this.elements.speechBubble.classList.add('hidden');
 
+    // Wait for obstacle to finish sliding off screen before reset
+    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const elapsedTotal = Date.now() - this.obstacleStartTime;
+    const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
+    if (remainingObstacleTime > 0) {
+      await this.delay(remainingObstacleTime);
+    }
+
     // Check if game over
     if (this.state.lives <= 0) {
       this.saveWordResult(true); // Save with timeout flag
@@ -436,7 +462,7 @@ export class SpellingGame {
   }
 
   private calculateScore(attempts: number): number {
-    // Scoring based on number of attempts
+    // Base scoring based on number of attempts
     switch (attempts) {
       case 1:
         return 20; // First attempt: 20 points
@@ -449,37 +475,198 @@ export class SpellingGame {
     }
   }
 
+  private calculateSpeedMultiplier(responseTime: number, totalTime: number): { multiplier: number; tier: SpeedTier } {
+    // Calculate percentage of time used (0-100%)
+    const timePercentage = (responseTime / totalTime) * 100;
+
+    // Speed tiers based on percentage of time used
+    if (timePercentage < 30) {
+      return { multiplier: 2.0, tier: 'lightning' }; // Lightning fast: < 30%
+    } else if (timePercentage < 50) {
+      return { multiplier: 1.5, tier: 'fast' }; // Fast: 30-50%
+    } else if (timePercentage < 70) {
+      return { multiplier: 1.25, tier: 'good' }; // Good: 50-70%
+    } else {
+      return { multiplier: 1.0, tier: 'normal' }; // Normal: > 70%
+    }
+  }
+
+  private calculateComboMultiplier(comboCount: number): number {
+    // Combo multiplier based on consecutive correct answers (first try only)
+    // Combo builds up for consecutive correct first-try answers
+    if (comboCount >= 5) {
+      return 1.5; // 5+ combo: 1.5× (max)
+    } else if (comboCount >= 4) {
+      return 1.3; // 4 combo: 1.3×
+    } else if (comboCount >= 3) {
+      return 1.2; // 3 combo: 1.2×
+    } else if (comboCount >= 2) {
+      return 1.1; // 2 combo: 1.1×
+    } else {
+      return 1.0; // 0-1: no combo bonus
+    }
+  }
+
+  private showSpeedFeedback(tier: SpeedTier, speedMultiplier: number, comboMultiplier: number, finalPoints: number): void {
+    // Show different messages based on speed tier
+    const tierMessages = {
+      lightning: '⚡ LIGHTNING FAST!',
+      fast: '🚀 FAST!',
+      good: '👍 GOOD SPEED!',
+      normal: '✓ CORRECT!'
+    };
+
+    const tierText = tierMessages[tier];
+    const totalMultiplier = speedMultiplier * comboMultiplier;
+
+    // Build compact multiplier display with emojis
+    let multiplierText = '';
+    if (totalMultiplier > 1.0) {
+      const parts = [];
+      if (speedMultiplier > 1.0) {
+        parts.push(`⚡${speedMultiplier}×`);
+      }
+      if (comboMultiplier > 1.0) {
+        parts.push(`🔥${comboMultiplier}×`);
+      }
+      const bonusText = parts.join(' · ');
+
+      // Show combo count if active
+      const comboCount = this.state.comboCount > 1 ? ` (${this.state.comboCount} combo)` : '';
+
+      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}× BONUS${comboCount}\n+${finalPoints} pts`;
+    } else {
+      const comboCount = this.state.comboCount > 1 ? ` 🔥${this.state.comboCount}` : '';
+      multiplierText = `+${finalPoints} pts${comboCount}`;
+    }
+
+    this.elements.speedTierText.textContent = tierText;
+    this.elements.speedMultiplierText.textContent = multiplierText;
+    this.elements.speedBonus.classList.remove('hidden');
+    this.elements.speedBonus.setAttribute('data-tier', tier); // For CSS styling
+  }
+
+  private async animatePointsToScore(points: number): Promise<void> {
+    // Get speed feedback display position (source of points)
+    const feedbackRect = this.elements.speedBonus.getBoundingClientRect();
+    const feedbackX = (feedbackRect.left + feedbackRect.width / 2) / window.innerWidth;
+    const feedbackY = (feedbackRect.top + feedbackRect.height / 2) / window.innerHeight;
+
+    // Get score display position (target)
+    const scoreRect = this.elements.scoreDisplay.getBoundingClientRect();
+    const scoreX = (scoreRect.left + scoreRect.width / 2) / window.innerWidth;
+    const scoreY = (scoreRect.top + scoreRect.height / 2) / window.innerHeight;
+
+    // Calculate angle from feedback to score
+    // Confetti angle: 90 = up, 0 = right, 180 = left, 270 = down
+    const deltaX = scoreX - feedbackX;
+    const deltaY = scoreY - feedbackY;
+    // Convert from standard atan2 to confetti's angle system
+    const mathAngle = Math.atan2(-deltaY, deltaX) * 180 / Math.PI; // Negate Y because screen coords
+    const angle = mathAngle + 90; // Rotate to confetti's coordinate system
+
+    // Determine number of particles based on points (more points = more particles)
+    const particleCount = Math.max(Math.floor(points), 2);
+
+    // Animate particles from feedback display to score
+    const duration = 1200; // Animation duration in ms
+    confetti({
+      particleCount,
+      startVelocity: 10,
+      spread: 40,
+      angle,
+      origin: {
+        x: feedbackX,
+        y: feedbackY
+      },
+      gravity: -1,
+      scalar: 1.2,
+      ticks: duration / 16.67, // Convert ms to frames (60fps)
+      shapes: ['circle'],
+      colors: ['#FFD700', '#FFA500', '#FF6347', '#87CEEB'],
+      disableForReducedMotion: true
+    });
+
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, duration));
+  }
+
   private async handleCorrectAnswer(): Promise<void> {
     this.phase = 'jumping';
 
-    const points = this.calculateScore(this.state.currentWordAttempts.length);
-    this.state.score += points;
-    this.state.wordsCompletedCorrectly += 1;
-    this.updateDisplay();
-    this.sessionManager.updateSessionScore(this.state.score);
-
-    // Calculate delay until obstacle reaches character
+    // Calculate speed metrics
     const speed = this.getObstacleSpeedForLevel(this.state.level);
     const obstacleReachTime = speed * 0.6; // Obstacle reaches character at 60% of animation
+    const responseTime = this.answerSubmitTime - this.obstacleStartTime;
+    const { multiplier: speedMultiplier, tier } = this.calculateSpeedMultiplier(responseTime, obstacleReachTime);
+
+    // Check if this was first-try correct (for combo)
+    const isFirstTryCorrect = this.state.currentWordAttempts.length === 1;
+
+    // Update combo count
+    if (isFirstTryCorrect) {
+      this.state.comboCount += 1;
+    } else {
+      this.state.comboCount = 0; // Reset combo on multiple attempts
+    }
+
+    // Calculate combo multiplier
+    const comboMultiplier = this.calculateComboMultiplier(this.state.comboCount);
+
+    // Calculate base and final scores (speed × combo)
+    const basePoints = this.calculateScore(this.state.currentWordAttempts.length);
+    const totalMultiplier = speedMultiplier * comboMultiplier;
+    const finalPoints = Math.round(basePoints * totalMultiplier);
+
+    // DON'T update score display yet - wait until after animation!
+    this.state.wordsCompletedCorrectly += 1;
+
+    // Play success sound and show score feedback immediately
+    this.playTadaSound();
+    this.showSpeedFeedback(tier, speedMultiplier, comboMultiplier, finalPoints);
+
+    // Calculate delay until obstacle reaches character
     const elapsedSinceObstacle = Date.now() - this.obstacleStartTime;
     const jumpDelay = obstacleReachTime - elapsedSinceObstacle;
 
-    // Wait for obstacle to reach character position, then jump
+    // Wait for obstacle to reach character, then jump
     if (jumpDelay > 0) {
       await this.delay(jumpDelay);
     }
+
     this.elements.character.classList.add('jumping');
 
-    // Celebration
-    this.celebrate();
+    // Keep score feedback on screen to read it
+    await this.delay(1000);
+
+    // Animate particles flying to score display
+    const animationPromise = this.animatePointsToScore(finalPoints);
+
+    // Update the score (particles will fly while score updates)
+    this.state.score += finalPoints;
+    this.updateDisplay();
+    this.sessionManager.updateSessionScore(this.state.score);
+
+    // Wait for animation to complete
+    await animationPromise;
+
+    // Hide speed feedback
+    this.elements.speedBonus.classList.add('hidden');
+
+    // Calculate how much time is left for obstacle to slide off screen
+    // The obstacle animation takes 'speed' ms total, started at obstacleStartTime
+    const elapsedTotal = Date.now() - this.obstacleStartTime;
+    const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
 
     // Wait for obstacle to finish sliding off screen
-    await this.delay(900);
+    if (remainingObstacleTime > 0) {
+      await this.delay(remainingObstacleTime);
+    }
 
     // Check for level up (every 5 correct words)
     const shouldLevelUp = this.state.wordsCompletedCorrectly % 5 === 0;
 
-    // Reset and continue
+    // Reset and continue (now obstacle is definitely off-screen)
     this.resetAnimations();
 
     if (shouldLevelUp) {
@@ -491,6 +678,9 @@ export class SpellingGame {
 
   private async handleIncorrectAnswer(correctAnswer: string): Promise<void> {
     this.phase = 'crashing';
+
+    // Reset combo on incorrect answer
+    this.state.comboCount = 0;
 
     // Calculate delay until obstacle reaches character
     const speed = this.getObstacleSpeedForLevel(this.state.level);
@@ -529,6 +719,13 @@ export class SpellingGame {
 
     // Hide speech bubble
     this.elements.speechBubble.classList.add('hidden');
+
+    // Wait for obstacle to finish sliding off screen before reset
+    const elapsedTotal = Date.now() - this.obstacleStartTime;
+    const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
+    if (remainingObstacleTime > 0) {
+      await this.delay(remainingObstacleTime);
+    }
 
     // Check if game over
     if (this.state.lives <= 0) {
@@ -570,11 +767,61 @@ export class SpellingGame {
   private saveWordResult(timedOut: boolean): void {
     if (!this.state.currentWord) return;
 
+    // Calculate speed metrics
+    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const obstacleReachTime = speed * 0.6;
+    const responseTime = this.answerSubmitTime > 0
+      ? this.answerSubmitTime - this.obstacleStartTime
+      : obstacleReachTime; // If no answer was submitted, use full time
+
+    // Calculate score with speed and combo multipliers (only for correct answers)
+    let speedMultiplier = 1.0;
+    let speedTier: SpeedTier = 'normal';
+    let comboMultiplier = 1.0;
+    let comboCount = 0;
+    let scoreEarned = 0;
+
+    if (timedOut) {
+      scoreEarned = 0;
+      comboCount = 0; // Combo is 0 after timeout
+    } else {
+      const baseScore = this.calculateScore(this.state.currentWordAttempts.length);
+      const lastAttemptCorrect = this.state.currentWordAttempts[this.state.currentWordAttempts.length - 1]?.correct;
+      const isFirstTryCorrect = this.state.currentWordAttempts.length === 1 && lastAttemptCorrect;
+
+      if (lastAttemptCorrect && this.answerSubmitTime > 0) {
+        // Correct answer - calculate speed bonus
+        const speedInfo = this.calculateSpeedMultiplier(responseTime, obstacleReachTime);
+        speedMultiplier = speedInfo.multiplier;
+        speedTier = speedInfo.tier;
+
+        // Combo bonus only for first-try correct answers
+        if (isFirstTryCorrect) {
+          comboCount = this.state.comboCount; // Save current combo count
+          comboMultiplier = this.calculateComboMultiplier(comboCount);
+        } else {
+          comboCount = 0; // No combo if multiple attempts
+        }
+
+        const totalMultiplier = speedMultiplier * comboMultiplier;
+        scoreEarned = Math.round(baseScore * totalMultiplier);
+      } else {
+        // Incorrect answer - no bonuses
+        scoreEarned = baseScore;
+        comboCount = 0;
+      }
+    }
+
     const wordResult: WordResult = {
       word: this.state.currentWord.text,
       difficulty: this.state.currentWord.difficulty,
       attempts: [...this.state.currentWordAttempts],
-      scoreEarned: timedOut ? 0 : this.calculateScore(this.state.currentWordAttempts.length),
+      scoreEarned,
+      speedMultiplier,
+      speedTier,
+      comboMultiplier,
+      comboCount,
+      responseTime,
       startTime: this.currentWordStartTime,
       endTime: Date.now(),
       level: this.state.level,
@@ -582,15 +829,8 @@ export class SpellingGame {
     };
 
     this.sessionManager.addWordResult(wordResult);
-  }
-
-  private celebrate(): void {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-    this.playTadaSound();
+    // Update word performance history for adaptive learning (per player)
+    this.sessionManager.updateWordPerformance(this.state.playerName, wordResult);
   }
 
   private async levelUp(): Promise<void> {
@@ -734,6 +974,9 @@ export class SpellingGame {
     // End session
     this.sessionManager.endSession();
 
+    // Reset word manager session
+    this.wordManager.resetSession();
+
     this.elements.gameScreen.classList.add('hidden');
     this.elements.gameOverScreen.classList.remove('hidden');
     this.elements.finalScore.textContent = this.state.score.toString();
@@ -807,7 +1050,7 @@ export class SpellingGame {
     this.elements.gameOverScreen.classList.add('hidden');
     this.elements.startScreen.classList.remove('hidden');
     this.phase = 'idle';
-    this.wordManager.resetUsedWords();
+    this.wordManager.resetSession();
     this.elements.playerNameInput.value = '';
   }
 
@@ -830,7 +1073,7 @@ export class SpellingGame {
     this.elements.gameScreen.classList.add('hidden');
     this.elements.startScreen.classList.remove('hidden');
     this.phase = 'idle';
-    this.wordManager.resetUsedWords();
+    this.wordManager.resetSession();
     this.resetAnimations();
   }
 

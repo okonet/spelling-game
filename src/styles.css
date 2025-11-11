@@ -599,8 +599,8 @@ body {
 /* Speech Bubble */
 .speech-bubble {
   position: absolute;
-  bottom: 165px; /* Above character (char at 35px + ~100px character height + 30px margin) */
-  left: 20px; /* Positioned to the left of character */
+  bottom: 165px; /* Above character */
+  left: 100px; /* Aligned with character */
   background: white;
   border: 3px solid #333;
   border-radius: 20px;
@@ -615,7 +615,7 @@ body {
   content: '';
   position: absolute;
   bottom: -15px;
-  left: 110px; /* Fixed position pointing to character center (~132px from screen edge) */
+  left: 30px; /* Arrow points down toward character */
   width: 0;
   height: 0;
   border-left: 15px solid transparent;
@@ -627,7 +627,7 @@ body {
   content: '';
   position: absolute;
   bottom: -20px;
-  left: 107px; /* Fixed position, accounting for border (110px - 3px) */
+  left: 27px; /* Accounting for border */
   width: 0;
   height: 0;
   border-left: 18px solid transparent;

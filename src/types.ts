@@ -30,7 +30,8 @@ export interface WordResult {
 }
 
 export interface PlayerSession {
-  playerName: string;
+  email: string; // Changed from playerName to support profiles
+  playerName?: string; // Keep for backwards compatibility with old sessions
   sessionId: string;
   startTime: number;
   endTime?: number;
@@ -51,7 +52,8 @@ export interface GameState {
   userInput: string;
   showCorrectSpelling: boolean;
   correctSpelling: string;
-  playerName: string;
+  playerName: string; // Deprecated: kept for backwards compatibility
+  currentProfile: UserProfile | null; // Active user profile
   level: number;
   wordsCompletedCorrectly: number;
   comboCount: number; // Consecutive correct answers (first try only)
@@ -63,7 +65,15 @@ export interface WordConfig {
   hard: string[];
 }
 
-export type GamePhase = 'idle' | 'speaking' | 'waiting-input' | 'validating' | 'jumping' | 'crashing' | 'game-over' | 'level-up';
+export type GamePhase =
+  | 'idle'
+  | 'speaking'
+  | 'waiting-input'
+  | 'validating'
+  | 'jumping'
+  | 'crashing'
+  | 'game-over'
+  | 'level-up';
 
 export interface WordPerformance {
   word: string;
@@ -76,4 +86,24 @@ export interface WordPerformance {
 
 export interface WordPerformanceMap {
   [word: string]: WordPerformance;
+}
+
+export interface VoiceSettings {
+  voiceURI: string;
+  rate: number; // 0.5 - 1.5
+  pitch: number; // 0.5 - 2.0
+  autoRepeat: boolean;
+  autoRepeatDelay: number; // seconds
+}
+
+export interface UserProfile {
+  email: string; // Used as unique ID
+  nickname: string;
+  avatar: string; // Emoji
+  preferences: {
+    initialDifficulty: Difficulty;
+    voice: VoiceSettings;
+  };
+  createdAt: number;
+  lastUsed: number;
 }

@@ -1,9 +1,11 @@
 import './statsStyles.css';
 import { SessionManager } from './sessionManager';
+import { ProfileManager } from './profileManager';
 import type { PlayerSession, WordResult } from './types';
 
 class StatsPage {
   private sessionManager: SessionManager;
+  private profileManager: ProfileManager;
   private elements: {
     backButton: HTMLElement;
     clearDataButton: HTMLElement;
@@ -13,12 +15,13 @@ class StatsPage {
 
   constructor() {
     this.sessionManager = new SessionManager();
+    this.profileManager = new ProfileManager();
 
     this.elements = {
       backButton: document.getElementById('back-to-game')!,
       clearDataButton: document.getElementById('clear-data')!,
       playerFilter: document.getElementById('player-filter')! as HTMLSelectElement,
-      statsContent: document.getElementById('stats-content')!
+      statsContent: document.getElementById('stats-content')!,
     };
 
     this.initializeEventListeners();
@@ -44,69 +47,90 @@ class StatsPage {
 
   private loadStats(): void {
     const sessions = this.sessionManager.getAllSessions();
+    const profiles = this.profileManager.getAllProfiles();
 
     if (sessions.length === 0) {
-      this.elements.statsContent.innerHTML = '<p class="no-data-message">No game sessions found. Play some games first!</p>';
+      this.elements.statsContent.innerHTML =
+        '<p class="no-data-message">No game sessions found. Play some games first!</p>';
       return;
     }
 
     // Populate player filter
-    this.populatePlayerFilter(sessions);
+    this.populatePlayerFilter(sessions, profiles);
 
-    // Filter sessions
-    const selectedPlayer = this.elements.playerFilter.value;
-    const filteredSessions = sessions.filter(s => s.playerName === selectedPlayer);
+    // Filter sessions by selected profile email
+    const selectedEmail = this.elements.playerFilter.value;
+    const filteredSessions = sessions.filter(s => s.email === selectedEmail);
 
     // Display player progress view
-    this.displayPlayerProgress(filteredSessions);
+    this.displayPlayerProgress(filteredSessions, profiles);
   }
 
-  private populatePlayerFilter(sessions: PlayerSession[]): void {
-    const playerNames = Array.from(new Set(sessions.map(s => s.playerName))).sort();
+  private populatePlayerFilter(sessions: PlayerSession[], profiles: any[]): void {
+    // Get unique emails from sessions
+    const uniqueEmails = Array.from(new Set(sessions.map(s => s.email)));
 
     const currentValue = this.elements.playerFilter.value;
     this.elements.playerFilter.innerHTML = '';
 
-    playerNames.forEach(name => {
+    uniqueEmails.forEach(email => {
+      const profile = profiles.find(p => p.email === email);
       const option = document.createElement('option');
-      option.value = name;
-      option.textContent = name;
+      option.value = email;
+
+      if (profile) {
+        // Show avatar + nickname for profiles
+        option.textContent = `${profile.avatar} ${profile.nickname}`;
+      } else {
+        // Fallback for old sessions without profiles
+        const session = sessions.find(s => s.email === email);
+        option.textContent = session?.playerName || email;
+      }
+
       this.elements.playerFilter.appendChild(option);
     });
 
-    // Restore previous selection if it still exists, otherwise select first player
-    if (currentValue && playerNames.includes(currentValue)) {
+    // Restore previous selection if it still exists, otherwise select first
+    if (currentValue && uniqueEmails.includes(currentValue)) {
       this.elements.playerFilter.value = currentValue;
-    } else if (playerNames.length > 0) {
-      this.elements.playerFilter.value = playerNames[0];
+    } else if (uniqueEmails.length > 0) {
+      this.elements.playerFilter.value = uniqueEmails[0];
     }
   }
 
-
-  private displayPlayerProgress(sessions: PlayerSession[]): void {
+  private displayPlayerProgress(sessions: PlayerSession[], profiles: any[]): void {
     const sortedSessions = sessions.sort((a, b) => a.startTime - b.startTime);
-    const playerName = sortedSessions[0]?.playerName || 'Unknown';
+    const email = sortedSessions[0]?.email;
+
+    // Get profile info if available
+    const profile = profiles.find(p => p.email === email);
+    const displayName = profile
+      ? `${profile.avatar} ${profile.nickname}`
+      : sortedSessions[0]?.playerName || 'Unknown';
 
     // Calculate overall stats with safe defaults
     const totalGames = sortedSessions.length;
     const scores = sortedSessions.map(s => s.totalScore || 0).filter(s => !isNaN(s));
     const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
-    const averageScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    const averageScore =
+      scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-    const levels = sortedSessions.map(s => {
-      if (!s.wordsPlayed || s.wordsPlayed.length === 0) return 1;
-      const maxLevel = s.wordsPlayed.reduce((max, w) => {
-        const level = w.level || 1;
-        return Math.max(max, level);
-      }, 1);
-      return maxLevel;
-    }).filter(l => !isNaN(l));
+    const levels = sortedSessions
+      .map(s => {
+        if (!s.wordsPlayed || s.wordsPlayed.length === 0) return 1;
+        const maxLevel = s.wordsPlayed.reduce((max, w) => {
+          const level = w.level || 1;
+          return Math.max(max, level);
+        }, 1);
+        return maxLevel;
+      })
+      .filter(l => !isNaN(l));
     const bestLevel = levels.length > 0 ? Math.max(...levels) : 1;
 
     // Calculate word accuracy
     const allWords = sortedSessions.flatMap(s => s.wordsPlayed || []);
-    const correctFirstTry = allWords.filter(w =>
-      w.attempts && w.attempts.length === 1 && w.attempts[0]?.correct
+    const correctFirstTry = allWords.filter(
+      w => w.attempts && w.attempts.length === 1 && w.attempts[0]?.correct
     ).length;
     const totalWords = allWords.length;
     const accuracyRate = totalWords > 0 ? Math.round((correctFirstTry / totalWords) * 100) : 0;
@@ -114,7 +138,7 @@ class StatsPage {
     const html = `
       <div class="player-progress-container">
         <div class="player-header">
-          <h2 class="player-name">📊 ${this.escapeHtml(playerName)}'s Progress</h2>
+          <h2 class="player-name">📊 ${this.escapeHtml(displayName)}'s Progress</h2>
           <div class="player-summary-stats">
             <div class="stat-box">
               <div class="stat-value">${totalGames}</div>
@@ -161,7 +185,7 @@ class StatsPage {
     this.elements.statsContent.innerHTML = html;
 
     // Add event listeners for expandable sessions
-    sortedSessions.forEach((session) => {
+    sortedSessions.forEach(session => {
       const toggleBtn = document.getElementById(`toggle-${session.sessionId}`);
       const detailsDiv = document.getElementById(`details-${session.sessionId}`);
 
@@ -181,7 +205,7 @@ class StatsPage {
       // Add delete button listener
       const deleteBtn = document.getElementById(`delete-${session.sessionId}`);
       if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
+        deleteBtn.addEventListener('click', e => {
           e.stopPropagation();
           if (confirm('Delete this session?')) {
             this.sessionManager.deleteSession(session.sessionId);
@@ -219,8 +243,12 @@ class StatsPage {
     // Determine trend
     const firstValue = values[0] || 0;
     const lastValue = values[values.length - 1] || 0;
-    const trendIndicator = lastValue > firstValue ? '📈 Improving' :
-                           lastValue < firstValue ? '📉 Declining' : '➡️ Stable';
+    const trendIndicator =
+      lastValue > firstValue
+        ? '📈 Improving'
+        : lastValue < firstValue
+          ? '📉 Declining'
+          : '➡️ Stable';
 
     return `
       <div class="chart-info">
@@ -231,7 +259,9 @@ class StatsPage {
         </div>
       </div>
       <div class="bar-chart">
-        ${bars.map((bar) => `
+        ${bars
+          .map(
+            bar => `
           <div class="bar-wrapper" title="${bar.dateStr}: ${bar.value}">
             <div class="bar ${bar.isImprovement ? 'bar-up' : bar.isDecline ? 'bar-down' : ''}"
                  style="height: ${bar.height}px">
@@ -239,24 +269,35 @@ class StatsPage {
             </div>
             <span class="bar-label">${bar.dateStr}</span>
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
     `;
   }
 
   private renderCompactSessions(sessions: PlayerSession[]): string {
-    return sessions.slice(0, 10).map((session, index) => {
-      const date = new Date(session.startTime).toLocaleDateString();
-      const time = new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const maxLevel = session.wordsPlayed.length > 0
-        ? session.wordsPlayed.reduce((max, w) => Math.max(max, w.level || 1), 1)
-        : 1;
-      const correctFirstTry = session.wordsPlayed.filter(w => w.attempts.length === 1 && w.attempts[0]?.correct).length;
-      const accuracy = session.wordsPlayed.length > 0
-        ? Math.round((correctFirstTry / session.wordsPlayed.length) * 100)
-        : 0;
+    return sessions
+      .slice(0, 10)
+      .map((session, index) => {
+        const date = new Date(session.startTime).toLocaleDateString();
+        const time = new Date(session.startTime).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const maxLevel =
+          session.wordsPlayed.length > 0
+            ? session.wordsPlayed.reduce((max, w) => Math.max(max, w.level || 1), 1)
+            : 1;
+        const correctFirstTry = session.wordsPlayed.filter(
+          w => w.attempts.length === 1 && w.attempts[0]?.correct
+        ).length;
+        const accuracy =
+          session.wordsPlayed.length > 0
+            ? Math.round((correctFirstTry / session.wordsPlayed.length) * 100)
+            : 0;
 
-      return `
+        return `
         <div class="compact-session-wrapper">
           <div class="compact-session">
             <div class="session-number">#${sessions.length - index}</div>
@@ -296,7 +337,8 @@ class StatsPage {
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   private renderSessionDetails(session: PlayerSession): string {
@@ -333,10 +375,11 @@ class StatsPage {
       return '<p class="no-words">No words attempted yet.</p>';
     }
 
-    return words.map(word => {
-      const finalCorrect = word.attempts[word.attempts.length - 1]?.correct;
+    return words
+      .map(word => {
+        const finalCorrect = word.attempts[word.attempts.length - 1]?.correct;
 
-      return `
+        return `
         <div class="word-card ${finalCorrect ? 'word-success' : 'word-failure'}">
           <div class="word-header">
             <span class="word-text">"${this.escapeHtml(word.word)}"</span>
@@ -345,16 +388,21 @@ class StatsPage {
           <div class="word-attempts">
             <span class="attempts-label">Attempts (${word.attempts.length}):</span>
             <div class="attempts-list">
-              ${word.attempts.map((attempt, index) => `
+              ${word.attempts
+                .map(
+                  (attempt, index) => `
                 <span class="attempt ${attempt.correct ? 'attempt-correct' : 'attempt-incorrect'}">
                   ${index + 1}. "${this.escapeHtml(attempt.spelling)}" ${attempt.correct ? '✓' : '✗'}
                 </span>
-              `).join('')}
+              `
+                )
+                .join('')}
             </div>
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   private formatDuration(ms: number): string {

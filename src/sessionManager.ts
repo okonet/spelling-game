@@ -6,15 +6,16 @@ const PERFORMANCE_KEY = 'spelling-game-word-performance';
 export class SessionManager {
   private currentSession: PlayerSession | null = null;
 
-  createSession(playerName: string, difficulty: string): PlayerSession {
+  createSession(email: string, difficulty: string, playerName?: string): PlayerSession {
     const session: PlayerSession = {
-      playerName,
+      email: email.toLowerCase().trim(),
+      playerName, // Optional: for backwards compatibility
       sessionId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       startTime: Date.now(),
       difficulty: difficulty as PlayerSession['difficulty'],
       totalScore: 0,
       wordsPlayed: [],
-      livesRemaining: 3
+      livesRemaining: 3,
     };
 
     this.currentSession = session;
@@ -74,8 +75,13 @@ export class SessionManager {
 
   getSessionsByPlayer(playerName: string): PlayerSession[] {
     return this.getAllSessions().filter(
-      session => session.playerName.toLowerCase() === playerName.toLowerCase()
+      session => session.playerName?.toLowerCase() === playerName.toLowerCase()
     );
+  }
+
+  getSessionsByEmail(email: string): PlayerSession[] {
+    const normalizedEmail = email.toLowerCase().trim();
+    return this.getAllSessions().filter(session => session.email.toLowerCase() === normalizedEmail);
   }
 
   clearAllSessions(): void {
@@ -87,9 +93,7 @@ export class SessionManager {
   }
 
   deleteSession(sessionId: string): void {
-    const sessions = this.getAllSessions().filter(
-      session => session.sessionId !== sessionId
-    );
+    const sessions = this.getAllSessions().filter(session => session.sessionId !== sessionId);
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
@@ -100,16 +104,16 @@ export class SessionManager {
 
   // Word Performance Tracking (per player)
   //
-  // Current localStorage structure (optimized for future DB migration):
-  // { [playerName]: { [word]: WordPerformance } }
+  // Updated localStorage structure (email-based with backwards compatibility):
+  // { [email_or_playerName]: { [word]: WordPerformance } }
   //
   // Future database schema would be:
   // Table: word_performance
-  // Columns: player_name (TEXT), word (TEXT), times_correct_first_try (INT),
+  // Columns: email (TEXT), word (TEXT), times_correct_first_try (INT),
   //          times_mistakes (INT), times_timeout (INT), total_attempts (INT),
   //          last_seen (TIMESTAMP)
-  // Primary Key: (player_name, word)
-  // Indexes: player_name, last_seen
+  // Primary Key: (email, word)
+  // Indexes: email, last_seen
   getWordPerformance(playerName: string): WordPerformanceMap {
     try {
       const data = localStorage.getItem(PERFORMANCE_KEY);
@@ -119,6 +123,11 @@ export class SessionManager {
       console.error('Failed to load word performance from localStorage:', error);
       return {};
     }
+  }
+
+  getWordPerformanceByEmail(email: string): WordPerformanceMap {
+    const normalizedEmail = email.toLowerCase().trim();
+    return this.getWordPerformance(normalizedEmail);
   }
 
   updateWordPerformance(playerName: string, wordResult: WordResult): void {
@@ -136,7 +145,7 @@ export class SessionManager {
         timesMistakes: 0,
         timesTimeout: 0,
         totalAttempts: 0,
-        lastSeen: 0
+        lastSeen: 0,
       };
 
       // Update stats based on result
@@ -158,6 +167,11 @@ export class SessionManager {
     } catch (error) {
       console.error('Failed to save word performance to localStorage:', error);
     }
+  }
+
+  updateWordPerformanceByEmail(email: string, wordResult: WordResult): void {
+    const normalizedEmail = email.toLowerCase().trim();
+    this.updateWordPerformance(normalizedEmail, wordResult);
   }
 
   clearWordPerformance(playerName?: string): void {

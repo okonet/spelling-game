@@ -1,14 +1,25 @@
 import confetti from 'canvas-confetti';
-import type { GameState, GamePhase, Difficulty, WordAttempt, WordResult, SpeedTier } from './types';
+import type {
+  GameState,
+  GamePhase,
+  Difficulty,
+  WordAttempt,
+  WordResult,
+  SpeedTier,
+  UserProfile,
+  VoiceSettings,
+} from './types';
 import { WordManager } from './words';
 import { AudioManager } from './audio';
 import { SessionManager } from './sessionManager';
+import { ProfileManager } from './profileManager';
 
 export class SpellingGame {
   private state: GameState;
   private wordManager: WordManager;
   private audioManager: AudioManager;
   private sessionManager: SessionManager;
+  private profileManager: ProfileManager;
   private phase: GamePhase = 'idle';
   private currentWordStartTime: number = 0;
   private obstacleStartTime: number = 0;
@@ -23,7 +34,6 @@ export class SpellingGame {
     gameScreen: HTMLElement;
     gameOverScreen: HTMLElement;
     wordInput: HTMLInputElement;
-    playerNameInput: HTMLInputElement;
     scoreDisplay: HTMLElement;
     livesDisplay: HTMLElement;
     levelDisplay: HTMLElement;
@@ -54,12 +64,20 @@ export class SpellingGame {
     speedBonus: HTMLElement;
     speedTierText: HTMLElement;
     speedMultiplierText: HTMLElement;
+    // Profile-related elements
+    profileSelector: HTMLElement;
+    createProfileBtn: HTMLElement;
+    createProfileModal: HTMLElement;
+    editProfileModal: HTMLElement;
+    createProfileForm: HTMLFormElement;
+    editProfileForm: HTMLFormElement;
   };
 
   constructor() {
     this.wordManager = new WordManager();
     this.audioManager = new AudioManager();
     this.sessionManager = new SessionManager();
+    this.profileManager = new ProfileManager();
 
     this.state = {
       currentWord: null,
@@ -72,10 +90,11 @@ export class SpellingGame {
       userInput: '',
       showCorrectSpelling: false,
       correctSpelling: '',
-      playerName: '',
+      playerName: '', // Deprecated
+      currentProfile: null,
       level: 1,
       wordsCompletedCorrectly: 0,
-      comboCount: 0
+      comboCount: 0,
     };
 
     this.elements = {
@@ -83,7 +102,6 @@ export class SpellingGame {
       gameScreen: document.getElementById('game-screen')!,
       gameOverScreen: document.getElementById('game-over-screen')!,
       wordInput: document.getElementById('word-input')! as HTMLInputElement,
-      playerNameInput: document.getElementById('player-name')! as HTMLInputElement,
       scoreDisplay: document.getElementById('score')!,
       livesDisplay: document.getElementById('lives')!,
       levelDisplay: document.getElementById('level')!,
@@ -113,37 +131,548 @@ export class SpellingGame {
       debugJumpPoint: document.getElementById('debug-jump-point')!,
       speedBonus: document.getElementById('speed-bonus')!,
       speedTierText: document.getElementById('speed-tier-text')!,
-      speedMultiplierText: document.getElementById('speed-multiplier-text')!
+      speedMultiplierText: document.getElementById('speed-multiplier-text')!,
+      // Profile-related elements
+      profileSelector: document.getElementById('profile-selector')!,
+      createProfileBtn: document.getElementById('create-profile-btn')!,
+      createProfileModal: document.getElementById('create-profile-modal')!,
+      editProfileModal: document.getElementById('edit-profile-modal')!,
+      createProfileForm: document.getElementById('create-profile-form')! as HTMLFormElement,
+      editProfileForm: document.getElementById('edit-profile-form')! as HTMLFormElement,
     };
 
     this.initializeEventListeners();
+    this.initializeProfileUI();
   }
 
   async initialize(): Promise<void> {
     await this.wordManager.loadWords();
   }
 
-  private initializeEventListeners(): void {
-    // Start game button
-    this.elements.startGameButton.addEventListener('click', () => {
-      const playerName = this.elements.playerNameInput.value.trim();
-      if (!playerName) {
-        alert('Please enter your name to start the game!');
-        this.elements.playerNameInput.focus();
-        return;
-      }
-      this.startGame(playerName);
+  private initializeProfileUI(): void {
+    // Render profile selector
+    this.renderProfileSelector();
+
+    // Create profile button
+    this.elements.createProfileBtn.addEventListener('click', () => {
+      this.openCreateProfileModal();
     });
 
-    // Allow Enter key in player name input to start game
-    this.elements.playerNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        this.elements.startGameButton.click();
+    // Modal close buttons
+    const closeCreateModal = document.getElementById('close-create-modal');
+    const cancelCreate = document.getElementById('cancel-create');
+    closeCreateModal?.addEventListener('click', () =>
+      this.closeModal(this.elements.createProfileModal)
+    );
+    cancelCreate?.addEventListener('click', () =>
+      this.closeModal(this.elements.createProfileModal)
+    );
+
+    const closeEditModal = document.getElementById('close-edit-modal');
+    const cancelEdit = document.getElementById('cancel-edit');
+    closeEditModal?.addEventListener('click', () =>
+      this.closeModal(this.elements.editProfileModal)
+    );
+    cancelEdit?.addEventListener('click', () => this.closeModal(this.elements.editProfileModal));
+
+    // Create profile form
+    this.elements.createProfileForm.addEventListener('submit', e => {
+      e.preventDefault();
+      this.handleCreateProfile();
+    });
+
+    // Edit profile form
+    this.elements.editProfileForm.addEventListener('submit', e => {
+      e.preventDefault();
+      this.handleEditProfile();
+    });
+
+    // Initialize emoji pickers
+    this.initializeEmojiPicker('emoji-grid', 'select-avatar-btn', 'emoji-picker');
+    this.initializeEmojiPicker('edit-emoji-grid', 'edit-avatar-btn', 'edit-emoji-picker');
+
+    // Initialize voice settings
+    this.initializeVoiceSettings();
+
+    // Auto-repeat checkbox toggle
+    const autoRepeatCheckbox = document.getElementById('profile-auto-repeat') as HTMLInputElement;
+    const autoRepeatDelaySection = document.getElementById('auto-repeat-delay-setting');
+    autoRepeatCheckbox?.addEventListener('change', () => {
+      if (autoRepeatDelaySection) {
+        autoRepeatDelaySection.style.display = autoRepeatCheckbox.checked ? 'block' : 'none';
       }
+    });
+
+    // Voice settings sliders - update labels
+    const rateSlider = document.getElementById('profile-rate') as HTMLInputElement;
+    const rateValue = document.getElementById('rate-value');
+    rateSlider?.addEventListener('input', () => {
+      if (rateValue) rateValue.textContent = rateSlider.value;
+    });
+
+    const pitchSlider = document.getElementById('profile-pitch') as HTMLInputElement;
+    const pitchValue = document.getElementById('pitch-value');
+    pitchSlider?.addEventListener('input', () => {
+      if (pitchValue) pitchValue.textContent = pitchSlider.value;
+    });
+
+    const delaySlider = document.getElementById('profile-auto-repeat-delay') as HTMLInputElement;
+    const delayValue = document.getElementById('delay-value');
+    delaySlider?.addEventListener('input', () => {
+      if (delayValue) delayValue.textContent = delaySlider.value;
+    });
+
+    // Voice preview button
+    const previewButton = document.getElementById('preview-voice');
+    previewButton?.addEventListener('click', () => {
+      this.previewVoice();
+    });
+  }
+
+  private renderProfileSelector(): void {
+    const profiles = this.profileManager.getAllProfiles();
+    const currentProfile = this.profileManager.getCurrentProfile();
+
+    if (profiles.length === 0) {
+      this.elements.profileSelector.innerHTML =
+        '<p class="no-profiles-message">No profiles yet. Create one to get started!</p>';
+      this.elements.startGameButton.disabled = true;
+      return;
+    }
+
+    this.elements.startGameButton.disabled = false;
+    this.elements.profileSelector.innerHTML = profiles
+      .map(profile => {
+        const isSelected = currentProfile?.email === profile.email;
+        return `
+        <div class="profile-card ${isSelected ? 'selected' : ''}" data-email="${profile.email}">
+          <div class="profile-avatar">${profile.avatar}</div>
+          <div class="profile-info">
+            <div class="profile-nickname">${profile.nickname}</div>
+            <div class="profile-email">${profile.email}</div>
+          </div>
+          <div class="profile-actions">
+            <button class="profile-edit-btn" data-email="${profile.email}">✏️</button>
+          </div>
+        </div>
+      `;
+      })
+      .join('');
+
+    // Add event listeners to profile cards
+    this.elements.profileSelector.querySelectorAll('.profile-card').forEach(card => {
+      card.addEventListener('click', e => {
+        const target = e.target as HTMLElement;
+        if (!target.classList.contains('profile-edit-btn')) {
+          const email = (card as HTMLElement).dataset.email!;
+          this.selectProfile(email);
+        }
+      });
+    });
+
+    // Add event listeners to edit buttons
+    this.elements.profileSelector.querySelectorAll('.profile-edit-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const email = (btn as HTMLElement).dataset.email!;
+        this.openEditProfileModal(email);
+      });
+    });
+  }
+
+  private selectProfile(email: string): void {
+    const result = this.profileManager.selectProfile(email);
+    if (result.success) {
+      this.renderProfileSelector();
+    }
+  }
+
+  private openCreateProfileModal(): void {
+    this.elements.createProfileModal.classList.remove('hidden');
+    // Reset form
+    this.elements.createProfileForm.reset();
+    const avatarBtn = document.getElementById('select-avatar-btn');
+    if (avatarBtn) avatarBtn.textContent = '👤';
+  }
+
+  private openEditProfileModal(email: string): void {
+    const profile = this.profileManager.getProfile(email);
+    if (!profile) return;
+
+    this.elements.editProfileModal.classList.remove('hidden');
+
+    // Populate form
+    (document.getElementById('edit-email') as HTMLInputElement).value = profile.email;
+    (document.getElementById('edit-nickname') as HTMLInputElement).value = profile.nickname;
+    const editAvatarBtn = document.getElementById('edit-avatar-btn');
+    if (editAvatarBtn) editAvatarBtn.textContent = profile.avatar;
+  }
+
+  private closeModal(modal: HTMLElement): void {
+    modal.classList.add('hidden');
+  }
+
+  private handleCreateProfile(): void {
+    const email = (document.getElementById('profile-email') as HTMLInputElement).value.trim();
+    const nickname = (document.getElementById('profile-nickname') as HTMLInputElement).value.trim();
+    const avatarBtn = document.getElementById('select-avatar-btn');
+    const avatar = avatarBtn?.textContent || '👤';
+    const difficulty = (document.getElementById('profile-difficulty') as HTMLSelectElement)
+      .value as Difficulty;
+
+    const voiceURI = (document.getElementById('profile-voice') as HTMLSelectElement).value;
+    const rate = parseFloat((document.getElementById('profile-rate') as HTMLInputElement).value);
+    const pitch = parseFloat((document.getElementById('profile-pitch') as HTMLInputElement).value);
+    const autoRepeat = (document.getElementById('profile-auto-repeat') as HTMLInputElement).checked;
+    const autoRepeatDelay = parseInt(
+      (document.getElementById('profile-auto-repeat-delay') as HTMLInputElement).value
+    );
+
+    const voiceSettings: VoiceSettings = {
+      voiceURI,
+      rate,
+      pitch,
+      autoRepeat,
+      autoRepeatDelay,
+    };
+
+    const result = this.profileManager.createProfile(
+      email,
+      nickname,
+      avatar,
+      difficulty,
+      voiceSettings
+    );
+
+    if (result.success) {
+      this.closeModal(this.elements.createProfileModal);
+      this.renderProfileSelector();
+      // Auto-select the newly created profile
+      if (result.profile) {
+        this.profileManager.selectProfile(result.profile.email);
+        this.renderProfileSelector();
+      }
+    } else {
+      alert(result.error || 'Failed to create profile');
+    }
+  }
+
+  private handleEditProfile(): void {
+    const email = (document.getElementById('edit-email') as HTMLInputElement).value.trim();
+    const nickname = (document.getElementById('edit-nickname') as HTMLInputElement).value.trim();
+    const avatarBtn = document.getElementById('edit-avatar-btn');
+    const avatar = avatarBtn?.textContent || '👤';
+
+    const result = this.profileManager.updateProfile(email, { nickname, avatar });
+
+    if (result.success) {
+      this.closeModal(this.elements.editProfileModal);
+      this.renderProfileSelector();
+    } else {
+      alert(result.error || 'Failed to update profile');
+    }
+  }
+
+  private initializeEmojiPicker(gridId: string, buttonId: string, pickerId: string): void {
+    const grid = document.getElementById(gridId);
+    const button = document.getElementById(buttonId);
+    const picker = document.getElementById(pickerId);
+
+    if (!grid || !button || !picker) return;
+
+    // Common emojis for avatars
+    const emojis = [
+      '😀',
+      '😃',
+      '😄',
+      '😁',
+      '😆',
+      '😅',
+      '🤣',
+      '😂',
+      '🙂',
+      '🙃',
+      '😉',
+      '😊',
+      '😇',
+      '🥰',
+      '😍',
+      '🤩',
+      '😘',
+      '😗',
+      '😚',
+      '😙',
+      '😋',
+      '😛',
+      '😜',
+      '🤪',
+      '😝',
+      '🤑',
+      '🤗',
+      '🤭',
+      '🤫',
+      '🤔',
+      '🤐',
+      '🤨',
+      '😐',
+      '😑',
+      '😶',
+      '😏',
+      '😒',
+      '🙄',
+      '😬',
+      '🤥',
+      '😌',
+      '😔',
+      '😪',
+      '🤤',
+      '😴',
+      '😷',
+      '🤒',
+      '🤕',
+      '🤢',
+      '🤮',
+      '🤧',
+      '🥵',
+      '🥶',
+      '🥴',
+      '😵',
+      '🤯',
+      '🤠',
+      '🥳',
+      '😎',
+      '🤓',
+      '🧐',
+      '👶',
+      '👧',
+      '🧒',
+      '👦',
+      '👩',
+      '🧑',
+      '👨',
+      '👵',
+      '🧓',
+      '👴',
+      '👲',
+      '👳',
+      '🧕',
+      '👮',
+      '👷',
+      '💂',
+      '🕵',
+      '👩‍⚕️',
+      '👨‍⚕️',
+      '👩‍🎓',
+      '👨‍🎓',
+      '👩‍🏫',
+      '👨‍🏫',
+      '👩‍⚖️',
+      '👨‍⚖️',
+      '👩‍🌾',
+      '👨‍🌾',
+      '👩‍🍳',
+      '👨‍🍳',
+      '👩‍🔧',
+      '👨‍🔧',
+      '👩‍🏭',
+      '👨‍🏭',
+      '👩‍💼',
+      '👨‍💼',
+      '🐶',
+      '🐱',
+      '🐭',
+      '🐹',
+      '🐰',
+      '🦊',
+      '🐻',
+      '🐼',
+      '🐨',
+      '🐯',
+      '🦁',
+      '🐮',
+      '🐷',
+      '🐸',
+      '🐵',
+      '🐔',
+      '🐧',
+      '🐦',
+      '🐤',
+      '🦆',
+      '🦅',
+      '🦉',
+      '🦇',
+      '🐺',
+      '🐗',
+      '🐴',
+      '🦄',
+      '🐝',
+      '🐛',
+      '🦋',
+      '🐌',
+      '🐞',
+      '🐜',
+      '🦟',
+      '🦗',
+      '🕷',
+      '🦂',
+      '🐢',
+      '🐍',
+      '🦎',
+      '🦖',
+      '🦕',
+      '🐙',
+      '🦑',
+      '🦐',
+      '🦞',
+      '🦀',
+      '🐡',
+      '🐠',
+      '🐟',
+      '🐬',
+      '🐳',
+      '🐋',
+      '🦈',
+      '🐊',
+      '🐅',
+      '🐆',
+      '🦓',
+      '🦍',
+      '🦧',
+      '⚽',
+      '🏀',
+      '🏈',
+      '⚾',
+      '🥎',
+      '🎾',
+      '🏐',
+      '🏉',
+      '🥏',
+      '🎱',
+      '🏓',
+      '🏸',
+      '🏒',
+      '🏑',
+      '🥍',
+      '🏏',
+      '🥅',
+      '⛳',
+      '🪁',
+      '🏹',
+      '🎣',
+      '🤿',
+      '🥊',
+      '🥋',
+    ];
+
+    grid.innerHTML = emojis
+      .map(emoji => `<button type="button" class="emoji-option">${emoji}</button>`)
+      .join('');
+
+    // Toggle picker
+    button.addEventListener('click', e => {
+      e.preventDefault();
+      picker.classList.toggle('hidden');
+    });
+
+    // Select emoji
+    grid.querySelectorAll('.emoji-option').forEach(option => {
+      option.addEventListener('click', () => {
+        button.textContent = (option as HTMLElement).textContent || '👤';
+        picker.classList.add('hidden');
+      });
+    });
+
+    // Close picker when clicking outside
+    document.addEventListener('click', e => {
+      const target = e.target as HTMLElement;
+      if (!button.contains(target) && !picker.contains(target)) {
+        picker.classList.add('hidden');
+      }
+    });
+  }
+
+  private initializeVoiceSettings(): void {
+    const voiceSelect = document.getElementById('profile-voice') as HTMLSelectElement;
+    if (!voiceSelect) return;
+
+    // Wait for voices to load
+    const populateVoices = () => {
+      const voices = this.audioManager.getQualityEnglishVoices();
+      voiceSelect.innerHTML = voices
+        .map(voice => `<option value="${voice.voiceURI}">${voice.name} (${voice.lang})</option>`)
+        .join('');
+    };
+
+    // Voices may not be immediately available
+    if (speechSynthesis.getVoices().length > 0) {
+      populateVoices();
+    }
+
+    speechSynthesis.addEventListener('voiceschanged', populateVoices);
+  }
+
+  private previewVoice(): void {
+    // List of simple preview words
+    const previewWords = [
+      'hello',
+      'welcome',
+      'fantastic',
+      'wonderful',
+      'excellent',
+      'amazing',
+      'superb',
+      'brilliant',
+    ];
+    const randomWord = previewWords[Math.floor(Math.random() * previewWords.length)];
+
+    // Get current voice settings from the form
+    const voiceSelect = document.getElementById('profile-voice') as HTMLSelectElement;
+    const rateInput = document.getElementById('profile-rate') as HTMLInputElement;
+    const pitchInput = document.getElementById('profile-pitch') as HTMLInputElement;
+
+    if (!voiceSelect || !rateInput || !pitchInput) return;
+
+    const voiceSettings: VoiceSettings = {
+      voiceURI: voiceSelect.value,
+      rate: parseFloat(rateInput.value),
+      pitch: parseFloat(pitchInput.value),
+      autoRepeat: false, // Don't auto-repeat during preview
+      autoRepeatDelay: 3,
+    };
+
+    // Save current settings
+    const originalSettings = this.audioManager.getVoiceSettings();
+
+    // Apply preview settings
+    this.audioManager.updateVoiceSettings(voiceSettings);
+
+    // Speak the word
+    this.audioManager
+      .speak(randomWord)
+      .then(() => {
+        // Restore original settings after preview
+        this.audioManager.updateVoiceSettings(originalSettings);
+      })
+      .catch(error => {
+        console.error('Voice preview error:', error);
+        // Restore original settings even on error
+        this.audioManager.updateVoiceSettings(originalSettings);
+      });
+  }
+
+  private initializeEventListeners(): void {
+    // Start game button - now requires a selected profile
+    this.elements.startGameButton.addEventListener('click', () => {
+      const currentProfile = this.profileManager.getCurrentProfile();
+      if (!currentProfile) {
+        alert('Please select or create a profile to start the game!');
+        return;
+      }
+      this.startGame(currentProfile);
     });
 
     // Word input
-    this.elements.wordInput.addEventListener('keypress', (e) => {
+    this.elements.wordInput.addEventListener('keypress', e => {
       if (e.key === 'Enter' && this.phase === 'waiting-input') {
         this.handleWordSubmit();
       }
@@ -182,7 +711,7 @@ export class SpellingGame {
     });
 
     // Debug mode toggle (press 'D' key)
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
       if (e.key === 'd' || e.key === 'D') {
         if (!this.elements.wordInput.matches(':focus')) {
           this.toggleDebugMode();
@@ -191,7 +720,7 @@ export class SpellingGame {
     });
 
     // Auto-focus input when player starts typing
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
       // Only auto-focus during waiting-input phase
       if (this.phase !== 'waiting-input') return;
 
@@ -269,9 +798,10 @@ export class SpellingGame {
     this.elements.debugJumpPoint.style.left = `${jumpPercent}%`;
   }
 
-  private startGame(playerName: string): void {
-    this.state.playerName = playerName;
-    this.state.difficulty = 'easy'; // Always start with easy
+  private startGame(profile: UserProfile): void {
+    this.state.currentProfile = profile;
+    this.state.playerName = profile.nickname; // For backwards compatibility
+    this.state.difficulty = profile.preferences.initialDifficulty;
     this.state.isPlaying = true;
     this.state.score = 0;
     this.state.lives = 3;
@@ -279,16 +809,24 @@ export class SpellingGame {
     this.state.wordsCompletedCorrectly = 0;
     this.state.isGameOver = false;
 
-    // Create new session
-    this.sessionManager.createSession(playerName, 'easy');
+    // Update AudioManager with profile's voice settings
+    this.audioManager.updateVoiceSettings(profile.preferences.voice);
+
+    // Create new session with email
+    this.sessionManager.createSession(
+      profile.email,
+      profile.preferences.initialDifficulty,
+      profile.nickname
+    );
 
     // Initialize weighted word lists based on this player's performance history
-    const performanceMap = this.sessionManager.getWordPerformance(playerName);
+    const performanceMap = this.sessionManager.getWordPerformanceByEmail(profile.email);
     this.wordManager.initializeSessionWords(performanceMap);
 
     this.elements.startScreen.classList.add('hidden');
     this.elements.gameScreen.classList.remove('hidden');
-    this.elements.playerNameDisplay.textContent = playerName;
+    // Display avatar + nickname
+    this.elements.playerNameDisplay.textContent = `${profile.avatar} ${profile.nickname}`;
 
     this.updateDisplay();
     this.nextRound();
@@ -385,7 +923,7 @@ export class SpellingGame {
     const attempt: WordAttempt = {
       spelling: userAnswer,
       correct: userAnswer === correctAnswer,
-      timestamp: this.answerSubmitTime
+      timestamp: this.answerSubmitTime,
     };
     this.state.currentWordAttempts.push(attempt);
 
@@ -469,13 +1007,16 @@ export class SpellingGame {
       case 2:
         return 10; // Second attempt: 10 points
       case 3:
-        return 5;  // Third attempt: 5 points
+        return 5; // Third attempt: 5 points
       default:
-        return 2;  // More attempts: 2 points
+        return 2; // More attempts: 2 points
     }
   }
 
-  private calculateSpeedMultiplier(responseTime: number, totalTime: number): { multiplier: number; tier: SpeedTier } {
+  private calculateSpeedMultiplier(
+    responseTime: number,
+    totalTime: number
+  ): { multiplier: number; tier: SpeedTier } {
     // Calculate percentage of time used (0-100%)
     const timePercentage = (responseTime / totalTime) * 100;
 
@@ -507,13 +1048,18 @@ export class SpellingGame {
     }
   }
 
-  private showSpeedFeedback(tier: SpeedTier, speedMultiplier: number, comboMultiplier: number, finalPoints: number): void {
+  private showSpeedFeedback(
+    tier: SpeedTier,
+    speedMultiplier: number,
+    comboMultiplier: number,
+    finalPoints: number
+  ): void {
     // Show different messages based on speed tier
     const tierMessages = {
       lightning: '⚡ LIGHTNING FAST!',
       fast: '🚀 FAST!',
       good: '👍 GOOD SPEED!',
-      normal: '✓ CORRECT!'
+      normal: '✓ CORRECT!',
     };
 
     const tierText = tierMessages[tier];
@@ -562,7 +1108,7 @@ export class SpellingGame {
     const deltaX = scoreX - feedbackX;
     const deltaY = scoreY - feedbackY;
     // Convert from standard atan2 to confetti's angle system
-    const mathAngle = Math.atan2(-deltaY, deltaX) * 180 / Math.PI; // Negate Y because screen coords
+    const mathAngle = (Math.atan2(-deltaY, deltaX) * 180) / Math.PI; // Negate Y because screen coords
     const angle = mathAngle + 90; // Rotate to confetti's coordinate system
 
     // Determine number of particles based on points (more points = more particles)
@@ -577,14 +1123,14 @@ export class SpellingGame {
       angle,
       origin: {
         x: feedbackX,
-        y: feedbackY
+        y: feedbackY,
       },
       gravity: -1,
       scalar: 1.2,
       ticks: duration / 16.67, // Convert ms to frames (60fps)
       shapes: ['circle'],
       colors: ['#FFD700', '#FFA500', '#FF6347', '#87CEEB'],
-      disableForReducedMotion: true
+      disableForReducedMotion: true,
     });
 
     // Wait for animation to complete
@@ -598,7 +1144,10 @@ export class SpellingGame {
     const speed = this.getObstacleSpeedForLevel(this.state.level);
     const obstacleReachTime = speed * 0.6; // Obstacle reaches character at 60% of animation
     const responseTime = this.answerSubmitTime - this.obstacleStartTime;
-    const { multiplier: speedMultiplier, tier } = this.calculateSpeedMultiplier(responseTime, obstacleReachTime);
+    const { multiplier: speedMultiplier, tier } = this.calculateSpeedMultiplier(
+      responseTime,
+      obstacleReachTime
+    );
 
     // Check if this was first-try correct (for combo)
     const isFirstTryCorrect = this.state.currentWordAttempts.length === 1;
@@ -770,9 +1319,10 @@ export class SpellingGame {
     // Calculate speed metrics
     const speed = this.getObstacleSpeedForLevel(this.state.level);
     const obstacleReachTime = speed * 0.6;
-    const responseTime = this.answerSubmitTime > 0
-      ? this.answerSubmitTime - this.obstacleStartTime
-      : obstacleReachTime; // If no answer was submitted, use full time
+    const responseTime =
+      this.answerSubmitTime > 0
+        ? this.answerSubmitTime - this.obstacleStartTime
+        : obstacleReachTime; // If no answer was submitted, use full time
 
     // Calculate score with speed and combo multipliers (only for correct answers)
     let speedMultiplier = 1.0;
@@ -786,7 +1336,8 @@ export class SpellingGame {
       comboCount = 0; // Combo is 0 after timeout
     } else {
       const baseScore = this.calculateScore(this.state.currentWordAttempts.length);
-      const lastAttemptCorrect = this.state.currentWordAttempts[this.state.currentWordAttempts.length - 1]?.correct;
+      const lastAttemptCorrect =
+        this.state.currentWordAttempts[this.state.currentWordAttempts.length - 1]?.correct;
       const isFirstTryCorrect = this.state.currentWordAttempts.length === 1 && lastAttemptCorrect;
 
       if (lastAttemptCorrect && this.answerSubmitTime > 0) {
@@ -825,12 +1376,14 @@ export class SpellingGame {
       startTime: this.currentWordStartTime,
       endTime: Date.now(),
       level: this.state.level,
-      timedOut
+      timedOut,
     };
 
     this.sessionManager.addWordResult(wordResult);
     // Update word performance history for adaptive learning (per player)
-    this.sessionManager.updateWordPerformance(this.state.playerName, wordResult);
+    if (this.state.currentProfile) {
+      this.sessionManager.updateWordPerformanceByEmail(this.state.currentProfile.email, wordResult);
+    }
   }
 
   private async levelUp(): Promise<void> {
@@ -847,7 +1400,7 @@ export class SpellingGame {
       particleCount: 200,
       spread: 100,
       origin: { y: 0.5 },
-      colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c']
+      colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c'],
     });
     this.playLevelUpSound();
 
@@ -861,7 +1414,7 @@ export class SpellingGame {
   private playTadaSound(): void {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const notes = [261.63, 329.63, 392.00, 523.25]; // C, E, G, C (major chord)
+      const notes = [261.63, 329.63, 392.0, 523.25]; // C, E, G, C (major chord)
       const duration = 0.15;
       const startTime = audioContext.currentTime;
 
@@ -921,7 +1474,7 @@ export class SpellingGame {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       // Triumphant ascending melody: C, E, G, C, E, G, High C
-      const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+      const notes = [261.63, 329.63, 392.0, 523.25, 659.25, 783.99, 1046.5];
       const duration = 0.2;
       const startTime = audioContext.currentTime;
 
@@ -987,19 +1540,24 @@ export class SpellingGame {
   }
 
   private displaySessionComparison(): void {
-    const allSessions = this.sessionManager.getAllSessions();
-    const playerSessions = allSessions.filter(s => s.playerName === this.state.playerName && s.endTime);
+    if (!this.state.currentProfile) return;
+
+    const playerSessions = this.sessionManager
+      .getSessionsByEmail(this.state.currentProfile.email)
+      .filter(s => s.endTime);
 
     if (playerSessions.length === 0) {
-      this.elements.comparisonStats.innerHTML = '<p style="text-align: center; color: #666;">This is your first game! 🎮</p>';
+      this.elements.comparisonStats.innerHTML =
+        '<p style="text-align: center; color: #666;">This is your first game! 🎮</p>';
       return;
     }
 
     const scores = playerSessions.map(s => s.totalScore);
     const levels = playerSessions.map(s => {
       // Calculate max level reached (based on words played)
-      const maxLevelWord = s.wordsPlayed.reduce((max, word) =>
-        word.level > max ? word.level : max, 1
+      const maxLevelWord = s.wordsPlayed.reduce(
+        (max, word) => (word.level > max ? word.level : max),
+        1
       );
       return maxLevelWord;
     });
@@ -1051,7 +1609,7 @@ export class SpellingGame {
     this.elements.startScreen.classList.remove('hidden');
     this.phase = 'idle';
     this.wordManager.resetSession();
-    this.elements.playerNameInput.value = '';
+    // Profile remains selected for next game
   }
 
   private quitGame(): void {

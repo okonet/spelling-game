@@ -307,13 +307,17 @@ body {
 
 .parallax-mountains {
   z-index: 2;
-  bottom: 50px;
+  bottom: 0; /* Sits on top of the ground */
+    zoom: 2;
+    opacity: 0.5;
   animation: parallaxSlow 60s linear infinite;
 }
 
 .parallax-trees {
   z-index: 3;
-  bottom: 30px;
+  bottom: 15px; /* Sits on top of the ground */
+    zoom: 2;
+    opacity: 0.75;
   animation: parallaxMedium 30s linear infinite;
 }
 
@@ -345,8 +349,7 @@ body {
 
 .cloud {
   position: absolute;
-  font-size: 2em;
-  opacity: 0.7;
+  font-size: 3.5em;
   animation: floatCloud linear infinite;
 }
 
@@ -355,6 +358,7 @@ body {
   left: 10%;
   animation-duration: 45s;
   animation-delay: 0s;
+  opacity: 0.25;
 }
 
 .cloud-2 {
@@ -362,6 +366,7 @@ body {
   left: 50%;
   animation-duration: 60s;
   animation-delay: -20s;
+  opacity: 0.5;
 }
 
 .cloud-3 {
@@ -369,6 +374,7 @@ body {
   left: 80%;
   animation-duration: 50s;
   animation-delay: -30s;
+  opacity: 0.85;
 }
 
 @keyframes floatCloud {
@@ -462,7 +468,7 @@ body {
   bottom: 0;
   left: 0;
   width: 200%; /* Double width for scrolling */
-  height: 35px;
+  height: 50px;
   background: linear-gradient(to bottom, #8bc34a 0%, #689f38 100%);
   border-top: 3px solid #7cb342;
   z-index: 4;
@@ -490,12 +496,13 @@ body {
 
 .character {
   position: absolute;
-  bottom: 35px; /* Positioned on ground */
+  bottom: 35px; /* Positioned on ground - accounts for emoji spacing */
   left: 100px;
   font-size: 4em;
   transform: scaleX(-1); /* Flip horizontally for left-to-right movement */
   animation: run 0.3s ease-in-out infinite; /* Continuous running animation */
   z-index: 5;
+  line-height: 1;
 }
 
 .character.jumping {
@@ -543,7 +550,7 @@ body {
     transform: scaleX(-1) rotate(-25deg);
   }
   40% {
-    bottom: 20px;
+    bottom: 30px;
     transform: scaleX(-1) rotate(15deg);
   }
   50% {
@@ -566,11 +573,12 @@ body {
 
 .obstacle {
   position: absolute;
-  bottom: 35px; /* On ground level */
+  bottom: 35px; /* On ground level - accounts for emoji spacing */
   right: -200px;
   font-size: 3em;
   opacity: 0;
   z-index: 5;
+  line-height: 1;
 }
 
 .obstacle.show {
@@ -591,8 +599,9 @@ body {
 /* Speech Bubble */
 .speech-bubble {
   position: absolute;
-  bottom: 145px;
-  left: 180px;
+  bottom: 165px; /* Above character (char at 35px + ~100px character height + 30px margin) */
+  left: 100px; /* Aligned with character position */
+  transform: translateX(-20%); /* Offset slightly to the left of character */
   background: white;
   border: 3px solid #333;
   border-radius: 20px;
@@ -607,7 +616,7 @@ body {
   content: '';
   position: absolute;
   bottom: -15px;
-  left: 20px;
+  left: 20%; /* Arrow points to character */
   width: 0;
   height: 0;
   border-left: 15px solid transparent;
@@ -619,7 +628,7 @@ body {
   content: '';
   position: absolute;
   bottom: -20px;
-  left: 17px;
+  left: calc(20% - 3px); /* Arrow points to character, accounting for border */
   width: 0;
   height: 0;
   border-left: 18px solid transparent;
@@ -638,22 +647,22 @@ body {
 @keyframes bubblePop {
   0% {
     opacity: 0;
-    transform: scale(0.5);
+    transform: translateX(-20%) scale(0.5);
   }
   50% {
-    transform: scale(1.1);
+    transform: translateX(-20%) scale(1.1);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(-20%) scale(1);
   }
 }
 
 /* Ugh Text */
 .ugh-text {
   position: absolute;
-  bottom: 135px;
-  left: 50px;
+  bottom: 155px; /* Above character */
+  left: 80px;
   font-size: 2.5em;
   font-weight: bold;
   color: #ff6b6b;

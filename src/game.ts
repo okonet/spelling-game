@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import type { GameState, GamePhase, Difficulty, WordAttempt, WordResult } from './types';
+import type { GameState, GamePhase, Difficulty, WordAttempt, WordResult, SpeedTier } from './types';
 import { WordManager } from './words';
 import { AudioManager } from './audio';
 import { SessionManager } from './sessionManager';
@@ -12,6 +12,7 @@ export class SpellingGame {
   private phase: GamePhase = 'idle';
   private currentWordStartTime: number = 0;
   private obstacleStartTime: number = 0;
+  private answerSubmitTime: number = 0;
   private obstacleTimeoutId: number | null = null;
   private debugMode: boolean = false;
   private debugUpdateInterval: number | null = null;
@@ -50,6 +51,11 @@ export class SpellingGame {
     debugSpeaking: HTMLElement;
     debugTyping: HTMLElement;
     debugJumpPoint: HTMLElement;
+    speedBonus: HTMLElement;
+    speedTierText: HTMLElement;
+    speedMultiplierText: HTMLElement;
+    comboIndicator: HTMLElement;
+    comboCount: HTMLElement;
   };
 
   constructor() {
@@ -70,7 +76,8 @@ export class SpellingGame {
       correctSpelling: '',
       playerName: '',
       level: 1,
-      wordsCompletedCorrectly: 0
+      wordsCompletedCorrectly: 0,
+      comboCount: 0
     };
 
     this.elements = {
@@ -105,7 +112,12 @@ export class SpellingGame {
       debugTimelineBar: document.getElementById('debug-timeline-bar')!,
       debugSpeaking: document.getElementById('debug-speaking')!,
       debugTyping: document.getElementById('debug-typing')!,
-      debugJumpPoint: document.getElementById('debug-jump-point')!
+      debugJumpPoint: document.getElementById('debug-jump-point')!,
+      speedBonus: document.getElementById('speed-bonus')!,
+      speedTierText: document.getElementById('speed-tier-text')!,
+      speedMultiplierText: document.getElementById('speed-multiplier-text')!,
+      comboIndicator: document.getElementById('combo-indicator')!,
+      comboCount: document.getElementById('combo-count')!
     };
 
     this.initializeEventListeners();
@@ -367,6 +379,9 @@ export class SpellingGame {
     this.phase = 'validating';
     this.elements.wordInput.disabled = true;
 
+    // Record the time when answer was submitted (for speed calculation)
+    this.answerSubmitTime = Date.now();
+
     // Clear obstacle timeout since user submitted
     this.clearObstacleTimeout();
 
@@ -374,7 +389,7 @@ export class SpellingGame {
     const attempt: WordAttempt = {
       spelling: userAnswer,
       correct: userAnswer === correctAnswer,
-      timestamp: Date.now()
+      timestamp: this.answerSubmitTime
     };
     this.state.currentWordAttempts.push(attempt);
 
@@ -400,6 +415,10 @@ export class SpellingGame {
     this.phase = 'crashing';
     this.clearObstacleTimeout();
     this.elements.wordInput.disabled = true;
+
+    // Reset combo on timeout
+    this.state.comboCount = 0;
+    this.updateComboDisplay();
 
     // Play crash animation and sound
     this.elements.character.classList.add('crashing');
@@ -440,7 +459,7 @@ export class SpellingGame {
   }
 
   private calculateScore(attempts: number): number {
-    // Scoring based on number of attempts
+    // Base scoring based on number of attempts
     switch (attempts) {
       case 1:
         return 20; // First attempt: 20 points
@@ -453,26 +472,146 @@ export class SpellingGame {
     }
   }
 
+  private calculateSpeedMultiplier(responseTime: number, totalTime: number): { multiplier: number; tier: SpeedTier } {
+    // Calculate percentage of time used (0-100%)
+    const timePercentage = (responseTime / totalTime) * 100;
+
+    // Speed tiers based on percentage of time used
+    if (timePercentage < 30) {
+      return { multiplier: 2.0, tier: 'lightning' }; // Lightning fast: < 30%
+    } else if (timePercentage < 50) {
+      return { multiplier: 1.5, tier: 'fast' }; // Fast: 30-50%
+    } else if (timePercentage < 70) {
+      return { multiplier: 1.25, tier: 'good' }; // Good: 50-70%
+    } else {
+      return { multiplier: 1.0, tier: 'normal' }; // Normal: > 70%
+    }
+  }
+
+  private calculateComboMultiplier(comboCount: number): number {
+    // Combo multiplier based on consecutive correct answers (first try only)
+    // Combo builds up for consecutive correct first-try answers
+    if (comboCount >= 5) {
+      return 1.5; // 5+ combo: 1.5× (max)
+    } else if (comboCount >= 4) {
+      return 1.3; // 4 combo: 1.3×
+    } else if (comboCount >= 3) {
+      return 1.2; // 3 combo: 1.2×
+    } else if (comboCount >= 2) {
+      return 1.1; // 2 combo: 1.1×
+    } else {
+      return 1.0; // 0-1: no combo bonus
+    }
+  }
+
+  private showSpeedFeedback(tier: SpeedTier, speedMultiplier: number, comboMultiplier: number, basePoints: number, finalPoints: number): void {
+    // Show different messages based on speed tier
+    const tierMessages = {
+      lightning: '⚡ LIGHTNING FAST! ⚡',
+      fast: '🚀 FAST!',
+      good: '👍 GOOD SPEED!',
+      normal: '✓ CORRECT!'
+    };
+
+    const tierText = tierMessages[tier];
+    let multiplierText = '';
+
+    const totalMultiplier = speedMultiplier * comboMultiplier;
+
+    if (totalMultiplier > 1.0) {
+      const parts = [];
+      if (speedMultiplier > 1.0) {
+        parts.push(`Speed ${speedMultiplier}×`);
+      }
+      if (comboMultiplier > 1.0) {
+        parts.push(`Combo ${comboMultiplier}×`);
+      }
+      const bonusText = parts.join(' + ');
+      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}× BONUS!\n${basePoints} → ${finalPoints} points!`;
+    } else {
+      multiplierText = `+${finalPoints} points!`;
+    }
+
+    this.elements.speedTierText.textContent = tierText;
+    this.elements.speedMultiplierText.textContent = multiplierText;
+    this.elements.speedBonus.classList.remove('hidden');
+    this.elements.speedBonus.setAttribute('data-tier', tier); // For CSS styling
+  }
+
+  private updateComboDisplay(): void {
+    if (this.state.comboCount >= 2) {
+      this.elements.comboIndicator.classList.remove('hidden');
+      this.elements.comboCount.textContent = this.state.comboCount.toString();
+
+      // Add animation class for visual feedback
+      this.elements.comboIndicator.classList.add('combo-pulse');
+      setTimeout(() => {
+        this.elements.comboIndicator.classList.remove('combo-pulse');
+      }, 300);
+    } else {
+      this.elements.comboIndicator.classList.add('hidden');
+    }
+  }
+
   private async handleCorrectAnswer(): Promise<void> {
     this.phase = 'jumping';
 
-    const points = this.calculateScore(this.state.currentWordAttempts.length);
-    this.state.score += points;
-    this.state.wordsCompletedCorrectly += 1;
-    this.updateDisplay();
-    this.sessionManager.updateSessionScore(this.state.score);
-
-    // Calculate delay until obstacle reaches character
+    // Calculate speed metrics
     const speed = this.getObstacleSpeedForLevel(this.state.level);
     const obstacleReachTime = speed * 0.6; // Obstacle reaches character at 60% of animation
-    const elapsedSinceObstacle = Date.now() - this.obstacleStartTime;
-    const jumpDelay = obstacleReachTime - elapsedSinceObstacle;
+    const responseTime = this.answerSubmitTime - this.obstacleStartTime;
+    const { multiplier: speedMultiplier, tier } = this.calculateSpeedMultiplier(responseTime, obstacleReachTime);
 
-    // Wait for obstacle to reach character position, then jump
+    // Check if this was first-try correct (for combo)
+    const isFirstTryCorrect = this.state.currentWordAttempts.length === 1;
+
+    // Update combo count
+    if (isFirstTryCorrect) {
+      this.state.comboCount += 1;
+    } else {
+      this.state.comboCount = 0; // Reset combo on multiple attempts
+    }
+
+    // Calculate combo multiplier
+    const comboMultiplier = this.calculateComboMultiplier(this.state.comboCount);
+
+    // Calculate base and final scores (speed × combo)
+    const basePoints = this.calculateScore(this.state.currentWordAttempts.length);
+    const totalMultiplier = speedMultiplier * comboMultiplier;
+    const finalPoints = Math.round(basePoints * totalMultiplier);
+
+    // DON'T update score display yet - wait until after jump!
+    this.state.wordsCompletedCorrectly += 1;
+
+    // Update combo display
+    this.updateComboDisplay();
+
+    // Show speed tier feedback BEFORE the jump
+    this.showSpeedFeedback(tier, speedMultiplier, comboMultiplier, basePoints, finalPoints);
+
+    // Calculate delay until obstacle reaches character (fast-forward by 60%)
+    const elapsedSinceObstacle = Date.now() - this.obstacleStartTime;
+    let jumpDelay = obstacleReachTime - elapsedSinceObstacle;
+
+    // Fast-forward: reduce wait time by 60% but keep minimum for visual satisfaction
+    if (jumpDelay > 0) {
+      jumpDelay = Math.max(jumpDelay * 0.4, 100); // 40% of original time, min 100ms
+    }
+
+    // Wait for (fast-forwarded) obstacle to reach character, then jump
     if (jumpDelay > 0) {
       await this.delay(jumpDelay);
     }
+
     this.elements.character.classList.add('jumping');
+
+    // Hide speed feedback when jumping
+    this.elements.speedBonus.classList.add('hidden');
+
+    // NOW update the score during/after the jump
+    this.state.score += finalPoints;
+    this.updateDisplay();
+    this.sessionManager.updateSessionScore(this.state.score);
 
     // Celebration
     this.celebrate();
@@ -495,6 +634,10 @@ export class SpellingGame {
 
   private async handleIncorrectAnswer(correctAnswer: string): Promise<void> {
     this.phase = 'crashing';
+
+    // Reset combo on incorrect answer
+    this.state.comboCount = 0;
+    this.updateComboDisplay();
 
     // Calculate delay until obstacle reaches character
     const speed = this.getObstacleSpeedForLevel(this.state.level);
@@ -574,11 +717,61 @@ export class SpellingGame {
   private saveWordResult(timedOut: boolean): void {
     if (!this.state.currentWord) return;
 
+    // Calculate speed metrics
+    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const obstacleReachTime = speed * 0.6;
+    const responseTime = this.answerSubmitTime > 0
+      ? this.answerSubmitTime - this.obstacleStartTime
+      : obstacleReachTime; // If no answer was submitted, use full time
+
+    // Calculate score with speed and combo multipliers (only for correct answers)
+    let speedMultiplier = 1.0;
+    let speedTier: SpeedTier = 'normal';
+    let comboMultiplier = 1.0;
+    let comboCount = 0;
+    let scoreEarned = 0;
+
+    if (timedOut) {
+      scoreEarned = 0;
+      comboCount = 0; // Combo is 0 after timeout
+    } else {
+      const baseScore = this.calculateScore(this.state.currentWordAttempts.length);
+      const lastAttemptCorrect = this.state.currentWordAttempts[this.state.currentWordAttempts.length - 1]?.correct;
+      const isFirstTryCorrect = this.state.currentWordAttempts.length === 1 && lastAttemptCorrect;
+
+      if (lastAttemptCorrect && this.answerSubmitTime > 0) {
+        // Correct answer - calculate speed bonus
+        const speedInfo = this.calculateSpeedMultiplier(responseTime, obstacleReachTime);
+        speedMultiplier = speedInfo.multiplier;
+        speedTier = speedInfo.tier;
+
+        // Combo bonus only for first-try correct answers
+        if (isFirstTryCorrect) {
+          comboCount = this.state.comboCount; // Save current combo count
+          comboMultiplier = this.calculateComboMultiplier(comboCount);
+        } else {
+          comboCount = 0; // No combo if multiple attempts
+        }
+
+        const totalMultiplier = speedMultiplier * comboMultiplier;
+        scoreEarned = Math.round(baseScore * totalMultiplier);
+      } else {
+        // Incorrect answer - no bonuses
+        scoreEarned = baseScore;
+        comboCount = 0;
+      }
+    }
+
     const wordResult: WordResult = {
       word: this.state.currentWord.text,
       difficulty: this.state.currentWord.difficulty,
       attempts: [...this.state.currentWordAttempts],
-      scoreEarned: timedOut ? 0 : this.calculateScore(this.state.currentWordAttempts.length),
+      scoreEarned,
+      speedMultiplier,
+      speedTier,
+      comboMultiplier,
+      comboCount,
+      responseTime,
       startTime: this.currentWordStartTime,
       endTime: Date.now(),
       level: this.state.level,

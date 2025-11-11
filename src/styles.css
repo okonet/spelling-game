@@ -662,6 +662,109 @@ body {
   z-index: 10;
 }
 
+/* Speed Bonus Feedback */
+.speed-bonus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: speedBonusPop 0.6s ease;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.speed-tier-text {
+  font-size: 2.5em;
+  margin-bottom: 8px;
+}
+
+.speed-multiplier-text {
+  font-size: 1.5em;
+  color: #333;
+}
+
+/* Different colors for different speed tiers */
+.speed-bonus[data-tier="lightning"] .speed-tier-text {
+  color: #ffd700;
+  animation: lightningPulse 0.3s ease infinite;
+}
+
+.speed-bonus[data-tier="fast"] .speed-tier-text {
+  color: #4CAF50;
+}
+
+.speed-bonus[data-tier="good"] .speed-tier-text {
+  color: #2196F3;
+}
+
+.speed-bonus[data-tier="normal"] .speed-tier-text {
+  color: #666;
+}
+
+@keyframes speedBonusPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes lightningPulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.4);
+  }
+}
+
+/* Combo Indicator */
+.combo-indicator {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  border-radius: 10px;
+  padding: 5px 15px;
+  animation: comboAppear 0.3s ease;
+}
+
+.combo-value {
+  font-size: 1.3em !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+.combo-pulse {
+  animation: comboPulse 0.3s ease;
+}
+
+@keyframes comboAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes comboPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
 @keyframes ughPop {
   0% {
     opacity: 0;

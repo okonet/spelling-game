@@ -1196,48 +1196,32 @@ export class SpellingGame {
   }
 
   private async animatePointsToScore(points: number): Promise<void> {
-    // Get speed feedback display position (source of points)
-    const feedbackRect = this.elements.speedBonus.getBoundingClientRect();
-    const feedbackX = (feedbackRect.left + feedbackRect.width / 2) / window.innerWidth;
-    const feedbackY = (feedbackRect.top + feedbackRect.height / 2) / window.innerHeight;
-
-    // Get score display position (target)
-    const scoreRect = this.elements.scoreDisplay.getBoundingClientRect();
+    // Get score box position for fireworks burst
+    const scoreElement = this.elements.scoreDisplay.parentElement as HTMLElement;
+    const scoreRect = scoreElement.getBoundingClientRect();
     const scoreX = (scoreRect.left + scoreRect.width / 2) / window.innerWidth;
     const scoreY = (scoreRect.top + scoreRect.height / 2) / window.innerHeight;
 
-    // Calculate angle from feedback to score
-    // Confetti angle: 90 = up, 0 = right, 180 = left, 270 = down
-    const deltaX = scoreX - feedbackX;
-    const deltaY = scoreY - feedbackY;
-    // Convert from standard atan2 to confetti's angle system
-    const mathAngle = (Math.atan2(-deltaY, deltaX) * 180) / Math.PI; // Negate Y because screen coords
-    const angle = mathAngle + 90; // Rotate to confetti's coordinate system
-
     // Determine number of particles based on points (more points = more particles)
-    const particleCount = Math.max(Math.floor(points), 2);
+    const particleCount = Math.min(Math.max(Math.floor(points * 10), 10), 50);
 
-    // Animate particles from feedback display to score
-    const duration = 1200; // Animation duration in ms
+    // Fireworks-style burst from score box
     confetti({
       particleCount,
-      startVelocity: 10,
-      spread: 40,
-      angle,
+      startVelocity: 30,
+      spread: 360,
       origin: {
-        x: feedbackX,
-        y: feedbackY,
+        x: scoreX,
+        y: scoreY,
       },
-      gravity: -1,
-      scalar: 1.2,
-      ticks: duration / 16.67, // Convert ms to frames (60fps)
-      shapes: ['circle'],
-      colors: ['#FFD700', '#FFA500', '#FF6347', '#87CEEB'],
+      colors: ['#FFD700', '#FFA500', '#FF6347', '#87CEEB', '#667eea', '#764ba2'],
+      shapes: ['circle', 'square'],
+      scalar: 0.8,
       disableForReducedMotion: true,
     });
 
     // Wait for animation to complete
-    await new Promise(resolve => setTimeout(resolve, duration));
+    await new Promise(resolve => setTimeout(resolve, 800));
   }
 
   private async handleCorrectAnswer(): Promise<void> {
@@ -1277,6 +1261,26 @@ export class SpellingGame {
     this.playTadaSound();
     this.showSpeedFeedback(tier, speedMultiplier, comboMultiplier, finalPoints);
 
+    // Schedule score update and confetti independently (after formula display time)
+    const scoreUpdateDelay = 2500; // Show formula for 2.5 seconds
+    const scoreUpdatePromise = this.delay(scoreUpdateDelay).then(async () => {
+      // Hide speed feedback
+      this.elements.speedBonus.classList.add('hidden');
+
+      // Trigger confetti
+      const confettiPromise = this.animatePointsToScore(finalPoints);
+
+      // Play coins sound and animate score increment (rolling counter effect)
+      this.playCoinsSound();
+      const oldScore = this.state.score;
+      this.state.score += finalPoints;
+      const scoreAnimationPromise = this.animateScoreIncrement(oldScore, this.state.score);
+      this.sessionManager.updateSessionScore(this.state.score);
+
+      // Wait for both animations to complete
+      await Promise.all([confettiPromise, scoreAnimationPromise]);
+    });
+
     // Calculate delay until obstacle reaches character
     const elapsedSinceObstacle = Date.now() - this.obstacleStartTime;
     const jumpDelay = obstacleReachTime - elapsedSinceObstacle;
@@ -1288,22 +1292,8 @@ export class SpellingGame {
 
     this.elements.character.classList.add('jumping');
 
-    // Keep score feedback on screen to read it
-    await this.delay(1000);
-
-    // Animate particles flying to score display
-    const animationPromise = this.animatePointsToScore(finalPoints);
-
-    // Update the score (particles will fly while score updates)
-    this.state.score += finalPoints;
-    this.updateDisplay();
-    this.sessionManager.updateSessionScore(this.state.score);
-
-    // Wait for animation to complete
-    await animationPromise;
-
-    // Hide speed feedback
-    this.elements.speedBonus.classList.add('hidden');
+    // Wait for score update to complete
+    await scoreUpdatePromise;
 
     // Calculate how much time is left for obstacle to slide off screen
     // The obstacle animation takes 'speed' ms total, started at obstacleStartTime
@@ -1504,6 +1494,7 @@ export class SpellingGame {
       spread: 100,
       origin: { y: 0.5 },
       colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c'],
+      zIndex: 1001,
     });
     this.playLevelUpSound();
 
@@ -1573,6 +1564,38 @@ export class SpellingGame {
     }
   }
 
+  private playCoinsSound(): void {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Gentle coin sound - soft ascending chime
+      const notes = [800, 950, 1100]; // Fewer, more pleasant frequencies
+      const duration = 0.06;
+      const startTime = audioContext.currentTime;
+
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine'; // Softer, more pleasant sound
+
+        // Gentle envelope for subtle effect
+        const noteStart = startTime + index * duration * 0.6;
+        gainNode.gain.setValueAtTime(0, noteStart);
+        gainNode.gain.linearRampToValueAtTime(0.08, noteStart + 0.005);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, noteStart + duration);
+
+        oscillator.start(noteStart);
+        oscillator.stop(noteStart + duration);
+      });
+    } catch (error) {
+      console.warn('Could not play coins sound:', error);
+    }
+  }
+
   private playLevelUpSound(): void {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -1621,6 +1644,28 @@ export class SpellingGame {
     const filledHearts = '❤️'.repeat(this.state.lives);
     const emptyHearts = '🖤'.repeat(maxLives - this.state.lives);
     this.elements.livesDisplay.textContent = filledHearts + emptyHearts;
+  }
+
+  private async animateScoreIncrement(fromScore: number, toScore: number): Promise<void> {
+    const duration = 800; // Total animation duration in ms
+    const steps = 60; // Number of animation frames
+    const stepDuration = duration / steps;
+    const difference = toScore - fromScore;
+
+    // Ease-out cubic function for smooth deceleration
+    const easeOutCubic = (t: number): number => {
+      return 1 - Math.pow(1 - t, 3);
+    };
+
+    for (let i = 0; i <= steps; i++) {
+      const progress = i / steps;
+      const easedProgress = easeOutCubic(progress);
+      const currentScore = Math.round(fromScore + difference * easedProgress);
+      this.elements.scoreDisplay.textContent = currentScore.toString();
+      if (i < steps) {
+        await this.delay(stepDuration);
+      }
+    }
   }
 
   private gameOver(): void {

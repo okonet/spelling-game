@@ -207,10 +207,10 @@ export class ProfileManager {
   }
 
   /**
-   * Get all profiles
+   * Get all profiles sorted by creation date (oldest first)
    */
   getAllProfiles(): UserProfile[] {
-    return Array.from(this.profiles.values()).sort((a, b) => b.lastUsed - a.lastUsed);
+    return Array.from(this.profiles.values()).sort((a, b) => a.createdAt - b.createdAt);
   }
 
   /**

@@ -1182,10 +1182,10 @@ export class SpellingGame {
       // Show combo count if active
       const comboCount = this.state.comboCount > 1 ? ` (${this.state.comboCount} combo)` : '';
 
-      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}× BONUS${comboCount}\n+${finalPoints} pts`;
+      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}×${comboCount}\n+${finalPoints}pts`;
     } else {
       const comboCount = this.state.comboCount > 1 ? ` 🔥${this.state.comboCount}` : '';
-      multiplierText = `+${finalPoints} pts${comboCount}`;
+      multiplierText = `+${finalPoints}pts${comboCount}`;
     }
 
     this.elements.speedTierText.textContent = tierText;
@@ -1626,6 +1626,9 @@ export class SpellingGame {
     this.state.isGameOver = true;
     this.phase = 'game-over';
 
+    // Stop any ongoing speech and auto-repeat
+    this.audioManager.stop();
+
     // End session
     this.sessionManager.endSession();
 
@@ -1707,6 +1710,9 @@ export class SpellingGame {
   }
 
   private resetGame(): void {
+    // Stop any ongoing speech and auto-repeat
+    this.audioManager.stop();
+
     this.elements.gameOverScreen.classList.add('hidden');
     this.elements.startScreen.classList.remove('hidden');
     this.phase = 'idle';
@@ -1718,6 +1724,9 @@ export class SpellingGame {
     // Clear any pending timeouts
     this.clearObstacleTimeout();
     this.stopDebugUpdate();
+
+    // Stop any ongoing speech and auto-repeat
+    this.audioManager.stop();
 
     // Save current word result if exists
     if (this.state.currentWord && this.currentWordStartTime > 0) {

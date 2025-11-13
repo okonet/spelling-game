@@ -22,9 +22,11 @@
       <!-- Game Screen -->
       <div id="game-screen" class="screen hidden">
         <div class="game-header">
-          <div class="player-info">
-            <span class="player-label">Player:</span>
-            <span id="player-name-display" class="player-name-display"></span>
+          <div class="player-section">
+            <div class="player-info">
+              <span id="player-name-display" class="player-name-display"></span>
+            </div>
+            <button id="quit-game" class="quit-btn quit-btn-compact">🚪</button>
           </div>
           <div class="stats">
             <div class="stat-item">
@@ -39,10 +41,6 @@
               <span class="stat-label">Lives:</span>
               <span id="lives" class="stat-value">❤️❤️❤️</span>
             </div>
-          </div>
-          <div class="game-actions">
-            <button id="speak-again" class="speak-btn">🔊 Hear Again</button>
-            <button id="quit-game" class="quit-btn">🚪 Quit Game</button>
           </div>
         </div>
 
@@ -87,14 +85,17 @@
 
         <div class="input-area">
           <p class="instruction">Type the word you heard and press Enter:</p>
-          <input
-            type="text"
-            id="word-input"
-            class="word-input"
-            placeholder="Type here..."
-            autocomplete="off"
-            spellcheck="false"
-          />
+          <div class="input-row">
+            <input
+              type="text"
+              id="word-input"
+              class="word-input"
+              placeholder="Type here..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="speak-again" class="speak-btn">🔊</button>
+          </div>
           <div id="error-message" class="error-message hidden"></div>
         </div>
 

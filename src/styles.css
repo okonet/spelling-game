@@ -21,6 +21,7 @@ body {
 }
 
 .screen {
+  position: relative;
   background: white;
   border-radius: 30px;
   padding: 40px;
@@ -100,8 +101,8 @@ body {
 
 .profile-card:hover {
   border-color: #667eea;
-  transform: translateX(5px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.3);
 }
 
 .profile-card.selected {
@@ -155,7 +156,8 @@ body {
 
 .profile-edit-btn:hover {
   background: #667eea;
-  transform: scale(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .create-profile-btn {
@@ -249,6 +251,7 @@ body {
 .modal-close:hover {
   background: #f0f0f0;
   color: #333;
+  transform: translateY(-2px);
 }
 
 /* Form */
@@ -333,8 +336,8 @@ body {
 }
 
 .avatar-display:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
 /* Emoji Picker */
@@ -527,8 +530,8 @@ body {
 }
 
 .start-game-btn:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(132, 250, 176, 0.4);
 }
 
 .view-stats-btn {
@@ -547,8 +550,8 @@ body {
 }
 
 .view-stats-btn:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
 }
 
 .difficulty-selector {
@@ -589,12 +592,12 @@ body {
 }
 
 .difficulty-btn:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .difficulty-btn:active {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(0);
 }
 
 .btn-icon {
@@ -603,12 +606,19 @@ body {
 
 /* Game Screen */
 .game-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   margin-bottom: 30px;
-  flex-wrap: wrap;
   gap: 20px;
+}
+
+.player-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  flex-shrink: 0;
 }
 
 .player-info {
@@ -616,6 +626,8 @@ body {
   padding: 10px 20px;
   border-radius: 15px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .player-label {
@@ -632,6 +644,9 @@ body {
 .stats {
   display: flex;
   gap: 30px;
+  justify-self: center;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .stat-item {
@@ -642,6 +657,7 @@ body {
   padding: 10px 20px;
   border-radius: 15px;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .stat-label {
@@ -654,15 +670,11 @@ body {
   color: #d63031;
 }
 
-.game-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
 .speak-btn {
-  padding: 10px 20px;
-  font-size: 1em;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  font-size: 1.5em;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -671,11 +683,15 @@ body {
   transition: all 0.3s ease;
   font-family: inherit;
   font-weight: bold;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .speak-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
 }
 
 .quit-btn {
@@ -692,8 +708,19 @@ body {
 }
 
 .quit-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.quit-btn-compact {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* Game Area */
@@ -1087,7 +1114,7 @@ body {
 /* Speed Bonus Feedback */
 .speed-bonus {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
@@ -1096,6 +1123,7 @@ body {
   animation: speedBonusPop 0.6s ease;
   z-index: 15;
   pointer-events: none;
+  min-width: 450px;
 }
 
 .speed-tier-text {
@@ -1179,9 +1207,18 @@ body {
   margin-bottom: 20px;
 }
 
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
 .word-input {
-  width: 100%;
-  max-width: 400px;
+  flex: 1;
+  min-width: 0;
   padding: 15px 25px;
   font-size: 1.5em;
   border: 3px solid #667eea;
@@ -1333,8 +1370,8 @@ body {
 }
 
 .play-again-btn:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(132, 250, 176, 0.4);
 }
 
 /* Level Up Overlay */

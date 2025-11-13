@@ -1,163 +1,358 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spelling Game</title>
-</head>
-<body>
-  <div class="container">
-    <!-- Start Screen -->
-    <div id="start-screen" class="screen">
-      <h1 class="game-title">🎮 Spelling Adventure!</h1>
-      <p class="subtitle">Beat the clock and progress through levels!</p>
-      <div class="player-name-section">
-        <label for="player-name" class="player-name-label">Enter your name:</label>
-        <input
-          type="text"
-          id="player-name"
-          class="player-name-input"
-          placeholder="Your name..."
-          autocomplete="name"
-          maxlength="30"
-        />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spelling Game</title>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Start Screen -->
+      <div id="start-screen" class="screen">
+        <h1 class="game-title">🎮 Spelling Adventure!</h1>
+        <p class="subtitle">Beat the clock and progress through levels!</p>
+        <div class="profile-section">
+          <div id="profile-selector" class="profile-selector"></div>
+          <button id="create-profile-btn" class="create-profile-btn">➕ Create New Profile</button>
+        </div>
+        <button id="start-game" class="start-game-btn">🚀 Start Game</button>
+        <button id="view-stats" class="view-stats-btn">📊 View Statistics</button>
       </div>
-      <button id="start-game" class="start-game-btn">🚀 Start Game</button>
-      <button id="view-stats" class="view-stats-btn">📊 View Statistics</button>
+
+      <!-- Game Screen -->
+      <div id="game-screen" class="screen hidden">
+        <div class="game-header">
+          <div class="player-info">
+            <span class="player-label">Player:</span>
+            <span id="player-name-display" class="player-name-display"></span>
+          </div>
+          <div class="stats">
+            <div class="stat-item">
+              <span class="stat-label">Level:</span>
+              <span id="level" class="stat-value">1</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Score:</span>
+              <span id="score" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Lives:</span>
+              <span id="lives" class="stat-value">❤️❤️❤️</span>
+            </div>
+          </div>
+          <div class="game-actions">
+            <button id="speak-again" class="speak-btn">🔊 Hear Again</button>
+            <button id="quit-game" class="quit-btn">🚪 Quit Game</button>
+          </div>
+        </div>
+
+        <div class="game-area">
+          <!-- Parallax Background Layers -->
+          <div class="parallax-layer parallax-sky">
+            <div class="clouds">
+              <div class="cloud cloud-1">☁️</div>
+              <div class="cloud cloud-2">☁️</div>
+              <div class="cloud cloud-3">☁️</div>
+            </div>
+          </div>
+          <div class="parallax-layer parallax-mountains">
+            <div class="mountain mountain-1">🏔️</div>
+            <div class="mountain mountain-2">⛰️</div>
+            <div class="mountain mountain-3">🏔️</div>
+          </div>
+          <div class="parallax-layer parallax-trees">
+            <div class="tree tree-1">🌲</div>
+            <div class="tree tree-2">🌳</div>
+            <div class="tree tree-3">🌲</div>
+            <div class="tree tree-4">🌳</div>
+          </div>
+
+          <!-- Ground -->
+          <div class="ground">
+            <div class="grass">🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾</div>
+          </div>
+
+          <!-- Game Elements -->
+          <div id="character" class="character">🏃</div>
+          <div id="speech-bubble" class="speech-bubble hidden">
+            <div id="speech-text" class="speech-text"></div>
+          </div>
+          <div id="ugh-text" class="ugh-text hidden">Ugh! 😵</div>
+          <div id="speed-bonus" class="speed-bonus hidden">
+            <div id="speed-tier-text" class="speed-tier-text"></div>
+            <div id="speed-multiplier-text" class="speed-multiplier-text"></div>
+          </div>
+          <div id="obstacle" class="obstacle"></div>
+        </div>
+
+        <div class="input-area">
+          <p class="instruction">Type the word you heard and press Enter:</p>
+          <input
+            type="text"
+            id="word-input"
+            class="word-input"
+            placeholder="Type here..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <div id="error-message" class="error-message hidden"></div>
+        </div>
+
+        <div id="current-word" class="debug hidden"></div>
+
+        <!-- Debug Panel -->
+        <div id="debug-panel" class="debug-panel hidden">
+          <div class="debug-header">
+            <strong>🐛 Debug Mode</strong>
+            <span class="debug-hint">(Press 'D' to toggle)</span>
+          </div>
+          <div id="debug-info" class="debug-info"></div>
+          <div class="debug-timeline">
+            <div id="debug-timeline-bar" class="debug-timeline-bar">
+              <div id="debug-speaking" class="debug-phase debug-phase-speaking"></div>
+              <div id="debug-typing" class="debug-phase debug-phase-typing"></div>
+              <div id="debug-jump-point" class="debug-marker debug-jump-marker"></div>
+            </div>
+            <div class="debug-timeline-labels">
+              <span>Start</span>
+              <span id="debug-timeline-current">Current</span>
+              <span>Jump Point</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="game-over-screen" class="screen hidden">
+        <h1 class="game-over-title">Game Over!</h1>
+        <div class="final-score-container">
+          <p class="final-score-label">Your Score:</p>
+          <p id="final-score" class="final-score">0</p>
+          <p id="final-level" class="final-level">Level 1</p>
+        </div>
+
+        <div id="session-comparison" class="session-comparison">
+          <h3 class="comparison-title">Your Performance</h3>
+          <div id="comparison-stats" class="comparison-stats"></div>
+        </div>
+
+        <div class="game-over-buttons">
+          <button id="play-again" class="play-again-btn">🎮 Play Again</button>
+          <button id="view-stats-gameover" class="view-stats-btn">📊 View All Stats</button>
+        </div>
+      </div>
+
+      <!-- Level Up Overlay -->
+      <div id="level-up-overlay" class="level-up-overlay hidden">
+        <div class="level-up-content">
+          <h2 class="level-up-title">🎉 Level Up! 🎉</h2>
+          <p id="level-up-message" class="level-up-message">Level 2</p>
+        </div>
+      </div>
+
+      <!-- Create Profile Modal -->
+      <div id="create-profile-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Create New Profile</h2>
+            <button class="modal-close" id="close-create-modal">&times;</button>
+          </div>
+          <form id="create-profile-form" class="profile-form">
+            <div class="profile-header-grid">
+              <div class="avatar-selector">
+                <button type="button" id="select-avatar-btn" class="avatar-display">👤</button>
+                <div id="emoji-picker" class="emoji-picker hidden">
+                  <div class="emoji-grid" id="emoji-grid"></div>
+                </div>
+              </div>
+              <div class="profile-fields">
+                <div class="form-group">
+                  <label for="profile-email">Email *</label>
+                  <input
+                    type="email"
+                    id="profile-email"
+                    required
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="profile-nickname">Nickname *</label>
+                  <input
+                    type="text"
+                    id="profile-nickname"
+                    required
+                    maxlength="20"
+                    placeholder="Your nickname"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="profile-difficulty">Starting Difficulty</label>
+              <select id="profile-difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Voice Settings</label>
+              <div class="voice-settings">
+                <div class="voice-setting">
+                  <label for="profile-voice">Voice</label>
+                  <div class="voice-selector-row">
+                    <select id="profile-voice"></select>
+                    <button type="button" id="preview-voice" class="preview-voice-btn">
+                      🔊 Preview
+                    </button>
+                  </div>
+                </div>
+
+                <div class="voice-setting">
+                  <label for="profile-rate"> Speech Rate: <span id="rate-value">1.0</span> </label>
+                  <input
+                    type="range"
+                    id="profile-rate"
+                    min="0.5"
+                    max="1.5"
+                    step="0.1"
+                    value="1.0"
+                  />
+                </div>
+
+                <div class="voice-setting">
+                  <label for="profile-pitch"> Pitch: <span id="pitch-value">1.0</span> </label>
+                  <input
+                    type="range"
+                    id="profile-pitch"
+                    min="0.5"
+                    max="2.0"
+                    step="0.1"
+                    value="1.0"
+                  />
+                </div>
+
+                <div class="voice-setting">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="profile-auto-repeat" />
+                    Auto-repeat word
+                  </label>
+                </div>
+
+                <div class="voice-setting" id="auto-repeat-delay-setting" style="display: none">
+                  <label for="profile-auto-repeat-delay">
+                    Repeat after: <span id="delay-value">3</span> seconds
+                  </label>
+                  <input
+                    type="range"
+                    id="profile-auto-repeat-delay"
+                    min="2"
+                    max="10"
+                    step="1"
+                    value="3"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" id="cancel-create">Cancel</button>
+              <button type="submit" class="btn-primary">Create Profile</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Edit Profile Modal -->
+      <div id="edit-profile-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Edit Profile</h2>
+            <button class="modal-close" id="close-edit-modal">&times;</button>
+          </div>
+          <form id="edit-profile-form" class="profile-form">
+            <div class="profile-header-grid">
+              <div class="avatar-selector">
+                <button type="button" id="edit-avatar-btn" class="avatar-display">👤</button>
+                <div id="edit-emoji-picker" class="emoji-picker hidden">
+                  <div class="emoji-grid" id="edit-emoji-grid"></div>
+                </div>
+              </div>
+              <div class="profile-fields">
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="edit-email" disabled />
+                </div>
+                <div class="form-group">
+                  <label for="edit-nickname">Nickname *</label>
+                  <input type="text" id="edit-nickname" required maxlength="20" />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Voice Settings</label>
+              <div class="voice-settings">
+                <div class="voice-setting">
+                  <label for="edit-voice">Voice</label>
+                  <div class="voice-selector-row">
+                    <select id="edit-voice"></select>
+                    <button type="button" id="edit-preview-voice" class="preview-voice-btn">
+                      🔊 Preview
+                    </button>
+                  </div>
+                </div>
+
+                <div class="voice-setting">
+                  <label for="edit-rate">
+                    Speech Rate: <span id="edit-rate-value">1.0</span>
+                  </label>
+                  <input type="range" id="edit-rate" min="0.5" max="1.5" step="0.1" value="1.0" />
+                </div>
+
+                <div class="voice-setting">
+                  <label for="edit-pitch"> Pitch: <span id="edit-pitch-value">1.0</span> </label>
+                  <input type="range" id="edit-pitch" min="0.5" max="2.0" step="0.1" value="1.0" />
+                </div>
+
+                <div class="voice-setting">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="edit-auto-repeat" />
+                    Auto-repeat word
+                  </label>
+                </div>
+
+                <div
+                  class="voice-setting"
+                  id="edit-auto-repeat-delay-setting"
+                  style="display: none"
+                >
+                  <label for="edit-auto-repeat-delay">
+                    Repeat after: <span id="edit-delay-value">3</span> seconds
+                  </label>
+                  <input
+                    type="range"
+                    id="edit-auto-repeat-delay"
+                    min="2"
+                    max="10"
+                    step="1"
+                    value="3"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" id="cancel-edit">Cancel</button>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
-    <!-- Game Screen -->
-    <div id="game-screen" class="screen hidden">
-      <div class="game-header">
-        <div class="player-info">
-          <span class="player-label">Player:</span>
-          <span id="player-name-display" class="player-name-display"></span>
-        </div>
-        <div class="stats">
-          <div class="stat-item">
-            <span class="stat-label">Level:</span>
-            <span id="level" class="stat-value">1</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Score:</span>
-            <span id="score" class="stat-value">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Lives:</span>
-            <span id="lives" class="stat-value">❤️❤️❤️</span>
-          </div>
-        </div>
-        <div class="game-actions">
-          <button id="speak-again" class="speak-btn">🔊 Hear Again</button>
-          <button id="quit-game" class="quit-btn">🚪 Quit Game</button>
-        </div>
-      </div>
-
-      <div class="game-area">
-        <!-- Parallax Background Layers -->
-        <div class="parallax-layer parallax-sky">
-          <div class="clouds">
-            <div class="cloud cloud-1">☁️</div>
-            <div class="cloud cloud-2">☁️</div>
-            <div class="cloud cloud-3">☁️</div>
-          </div>
-        </div>
-        <div class="parallax-layer parallax-mountains">
-          <div class="mountain mountain-1">🏔️</div>
-          <div class="mountain mountain-2">⛰️</div>
-          <div class="mountain mountain-3">🏔️</div>
-        </div>
-        <div class="parallax-layer parallax-trees">
-          <div class="tree tree-1">🌲</div>
-          <div class="tree tree-2">🌳</div>
-          <div class="tree tree-3">🌲</div>
-          <div class="tree tree-4">🌳</div>
-        </div>
-
-        <!-- Ground -->
-        <div class="ground">
-          <div class="grass">🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾🌿🌾</div>
-        </div>
-
-        <!-- Game Elements -->
-        <div id="character" class="character">🏃</div>
-        <div id="speech-bubble" class="speech-bubble hidden">
-          <div id="speech-text" class="speech-text"></div>
-        </div>
-        <div id="ugh-text" class="ugh-text hidden">Ugh! 😵</div>
-        <div id="speed-bonus" class="speed-bonus hidden">
-          <div id="speed-tier-text" class="speed-tier-text"></div>
-          <div id="speed-multiplier-text" class="speed-multiplier-text"></div>
-        </div>
-        <div id="obstacle" class="obstacle"></div>
-      </div>
-
-      <div class="input-area">
-        <p class="instruction">Type the word you heard and press Enter:</p>
-        <input
-          type="text"
-          id="word-input"
-          class="word-input"
-          placeholder="Type here..."
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <div id="error-message" class="error-message hidden"></div>
-      </div>
-
-      <div id="current-word" class="debug hidden"></div>
-
-      <!-- Debug Panel -->
-      <div id="debug-panel" class="debug-panel hidden">
-        <div class="debug-header">
-          <strong>🐛 Debug Mode</strong>
-          <span class="debug-hint">(Press 'D' to toggle)</span>
-        </div>
-        <div id="debug-info" class="debug-info"></div>
-        <div class="debug-timeline">
-          <div id="debug-timeline-bar" class="debug-timeline-bar">
-            <div id="debug-speaking" class="debug-phase debug-phase-speaking"></div>
-            <div id="debug-typing" class="debug-phase debug-phase-typing"></div>
-            <div id="debug-jump-point" class="debug-marker debug-jump-marker"></div>
-          </div>
-          <div class="debug-timeline-labels">
-            <span>Start</span>
-            <span id="debug-timeline-current">Current</span>
-            <span>Jump Point</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Game Over Screen -->
-    <div id="game-over-screen" class="screen hidden">
-      <h1 class="game-over-title">Game Over!</h1>
-      <div class="final-score-container">
-        <p class="final-score-label">Your Score:</p>
-        <p id="final-score" class="final-score">0</p>
-        <p id="final-level" class="final-level">Level 1</p>
-      </div>
-
-      <div id="session-comparison" class="session-comparison">
-        <h3 class="comparison-title">Your Performance</h3>
-        <div id="comparison-stats" class="comparison-stats"></div>
-      </div>
-
-      <div class="game-over-buttons">
-        <button id="play-again" class="play-again-btn">🎮 Play Again</button>
-        <button id="view-stats-gameover" class="view-stats-btn">📊 View All Stats</button>
-      </div>
-    </div>
-
-    <!-- Level Up Overlay -->
-    <div id="level-up-overlay" class="level-up-overlay hidden">
-      <div class="level-up-content">
-        <h2 class="level-up-title">🎉 Level Up! 🎉</h2>
-        <p id="level-up-message" class="level-up-message">Level 2</p>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="/src/main.ts"></script>
-</body>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

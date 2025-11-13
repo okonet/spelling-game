@@ -64,37 +64,451 @@ body {
   margin-bottom: 30px;
 }
 
-/* Player Name Section */
-.player-name-section {
-  text-align: center;
+/* Profile Section */
+.profile-section {
   margin-bottom: 30px;
 }
 
-.player-name-label {
-  display: block;
-  font-size: 1.2em;
-  color: #667eea;
-  margin-bottom: 10px;
-  font-weight: bold;
+.profile-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-.player-name-input {
-  width: 100%;
-  max-width: 300px;
-  padding: 12px 20px;
-  font-size: 1.2em;
-  border: 3px solid #667eea;
-  border-radius: 15px;
+.no-profiles-message {
   text-align: center;
-  font-family: inherit;
-  outline: none;
+  color: #666;
+  font-size: 1.1em;
+  padding: 30px;
+}
+
+.profile-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 15px;
+  align-items: center;
+  padding: 15px;
+  border: 3px solid #ddd;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.profile-card:hover {
+  border-color: #667eea;
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.profile-card.selected {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+.profile-avatar {
+  font-size: 2em;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* Allow text to truncate if needed */
+}
+
+.profile-nickname {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 3px;
+}
+
+.profile-email {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-edit-btn {
+  background: none;
+  border: 2px solid #667eea;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.2em;
   transition: all 0.3s ease;
 }
 
-.player-name-input:focus {
-  border-color: #764ba2;
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-  transform: scale(1.02);
+.profile-edit-btn:hover {
+  background: #667eea;
+  transform: scale(1.1);
+}
+
+.create-profile-btn {
+  width: 100%;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.create-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.modal-header h2 {
+  color: #667eea;
+  font-size: 1.8em;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2em;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Form */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: bold;
+  color: #555;
+  font-size: 1.05em;
+}
+
+.form-group input[type='email'],
+.form-group input[type='text'],
+.form-group select {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 1em;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+}
+
+.form-group input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Profile Header Grid */
+.profile-header-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.profile-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.profile-fields .form-group {
+  margin-bottom: 0;
+}
+
+/* Avatar Selector */
+.avatar-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-display {
+  font-size: 3.5em;
+  width: 80px;
+  height: 80px;
+  border: 3px solid #667eea;
+  border-radius: 15px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.avatar-display:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Emoji Picker */
+.emoji-picker {
+  position: absolute;
+  top: 90px;
+  left: 0;
+  background: white;
+  border: 3px solid #667eea;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+}
+
+.emoji-option {
+  background: none;
+  border: 2px solid transparent;
+  padding: 8px;
+  font-size: 1.8em;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.emoji-option:hover {
+  background: #f0f0f0;
+  border-color: #667eea;
+  transform: scale(1.15);
+}
+
+/* Voice Settings */
+.voice-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 15px;
+  background: #f8f9ff;
+  border-radius: 10px;
+}
+
+.voice-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-selector-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.voice-selector-row select {
+  flex: 1;
+  min-width: 0; /* Allow select to shrink if needed */
+}
+
+.preview-voice-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95em;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+.preview-voice-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+}
+
+.preview-voice-btn:active {
+  transform: translateY(0);
+}
+
+.voice-setting label {
+  font-weight: normal;
+  font-size: 0.95em;
+  color: #555;
+}
+
+.voice-setting input[type='range'] {
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: #ddd;
+  outline: none;
+  cursor: pointer;
+}
+
+.voice-setting input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.voice-setting input[type='range']::-webkit-slider-thumb:hover {
+  background: #764ba2;
+  transform: scale(1.2);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+  transform: translateY(-2px);
 }
 
 .start-game-btn {

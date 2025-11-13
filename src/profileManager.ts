@@ -123,11 +123,15 @@ export class ProfileManager {
   }
 
   /**
-   * Update profile (limited: only nickname and avatar can be changed)
+   * Update profile (nickname, avatar, and voice preferences can be changed)
    */
   updateProfile(
     email: string,
-    updates: { nickname?: string; avatar?: string }
+    updates: {
+      nickname?: string;
+      avatar?: string;
+      preferences?: { voice?: VoiceSettings; initialDifficulty?: Difficulty };
+    }
   ): { success: boolean; error?: string; profile?: UserProfile } {
     const normalizedEmail = email.toLowerCase().trim();
     const profile = this.profiles.get(normalizedEmail);
@@ -151,6 +155,15 @@ export class ProfileManager {
         return { success: false, error: 'Avatar cannot be empty' };
       }
       profile.avatar = trimmedAvatar;
+    }
+
+    if (updates.preferences !== undefined) {
+      if (updates.preferences.voice !== undefined) {
+        profile.preferences.voice = updates.preferences.voice;
+      }
+      if (updates.preferences.initialDifficulty !== undefined) {
+        profile.preferences.initialDifficulty = updates.preferences.initialDifficulty;
+      }
     }
 
     this.profiles.set(normalizedEmail, profile);
@@ -281,7 +294,7 @@ export class ProfileManager {
           // Create a default profile
           const defaultVoiceSettings: VoiceSettings = {
             voiceURI: '',
-            rate: 0.6,
+            rate: 1.0,
             pitch: 1.0,
             autoRepeat: false,
             autoRepeatDelay: 3,

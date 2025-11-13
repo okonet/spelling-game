@@ -158,33 +158,32 @@
             <button class="modal-close" id="close-create-modal">&times;</button>
           </div>
           <form id="create-profile-form" class="profile-form">
-            <div class="form-group">
-              <label for="profile-email">Email *</label>
-              <input
-                type="email"
-                id="profile-email"
-                required
-                placeholder="your.email@example.com"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="profile-nickname">Nickname *</label>
-              <input
-                type="text"
-                id="profile-nickname"
-                required
-                maxlength="20"
-                placeholder="Your nickname"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>Avatar *</label>
+            <div class="profile-header-grid">
               <div class="avatar-selector">
                 <button type="button" id="select-avatar-btn" class="avatar-display">👤</button>
                 <div id="emoji-picker" class="emoji-picker hidden">
                   <div class="emoji-grid" id="emoji-grid"></div>
+                </div>
+              </div>
+              <div class="profile-fields">
+                <div class="form-group">
+                  <label for="profile-email">Email *</label>
+                  <input
+                    type="email"
+                    id="profile-email"
+                    required
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="profile-nickname">Nickname *</label>
+                  <input
+                    type="text"
+                    id="profile-nickname"
+                    required
+                    maxlength="20"
+                    placeholder="Your nickname"
+                  />
                 </div>
               </div>
             </div>
@@ -212,14 +211,14 @@
                 </div>
 
                 <div class="voice-setting">
-                  <label for="profile-rate"> Speech Rate: <span id="rate-value">0.6</span> </label>
+                  <label for="profile-rate"> Speech Rate: <span id="rate-value">1.0</span> </label>
                   <input
                     type="range"
                     id="profile-rate"
                     min="0.5"
                     max="1.5"
                     step="0.1"
-                    value="0.6"
+                    value="1.0"
                   />
                 </div>
 
@@ -274,22 +273,73 @@
             <button class="modal-close" id="close-edit-modal">&times;</button>
           </div>
           <form id="edit-profile-form" class="profile-form">
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" id="edit-email" disabled />
-            </div>
-
-            <div class="form-group">
-              <label for="edit-nickname">Nickname *</label>
-              <input type="text" id="edit-nickname" required maxlength="20" />
-            </div>
-
-            <div class="form-group">
-              <label>Avatar *</label>
+            <div class="profile-header-grid">
               <div class="avatar-selector">
                 <button type="button" id="edit-avatar-btn" class="avatar-display">👤</button>
                 <div id="edit-emoji-picker" class="emoji-picker hidden">
                   <div class="emoji-grid" id="edit-emoji-grid"></div>
+                </div>
+              </div>
+              <div class="profile-fields">
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="edit-email" disabled />
+                </div>
+                <div class="form-group">
+                  <label for="edit-nickname">Nickname *</label>
+                  <input type="text" id="edit-nickname" required maxlength="20" />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Voice Settings</label>
+              <div class="voice-settings">
+                <div class="voice-setting">
+                  <label for="edit-voice">Voice</label>
+                  <div class="voice-selector-row">
+                    <select id="edit-voice"></select>
+                    <button type="button" id="edit-preview-voice" class="preview-voice-btn">
+                      🔊 Preview
+                    </button>
+                  </div>
+                </div>
+
+                <div class="voice-setting">
+                  <label for="edit-rate">
+                    Speech Rate: <span id="edit-rate-value">1.0</span>
+                  </label>
+                  <input type="range" id="edit-rate" min="0.5" max="1.5" step="0.1" value="1.0" />
+                </div>
+
+                <div class="voice-setting">
+                  <label for="edit-pitch"> Pitch: <span id="edit-pitch-value">1.0</span> </label>
+                  <input type="range" id="edit-pitch" min="0.5" max="2.0" step="0.1" value="1.0" />
+                </div>
+
+                <div class="voice-setting">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="edit-auto-repeat" />
+                    Auto-repeat word
+                  </label>
+                </div>
+
+                <div
+                  class="voice-setting"
+                  id="edit-auto-repeat-delay-setting"
+                  style="display: none"
+                >
+                  <label for="edit-auto-repeat-delay">
+                    Repeat after: <span id="edit-delay-value">3</span> seconds
+                  </label>
+                  <input
+                    type="range"
+                    id="edit-auto-repeat-delay"
+                    min="2"
+                    max="10"
+                    step="1"
+                    value="3"
+                  />
                 </div>
               </div>
             </div>

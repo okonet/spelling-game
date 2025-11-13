@@ -50,7 +50,7 @@ export class SpellingGame {
     playerNameDisplay: HTMLElement;
     levelUpOverlay: HTMLElement;
     levelUpMessage: HTMLElement;
-    startGameButton: HTMLElement;
+    startGameButton: HTMLButtonElement;
     playAgainButton: HTMLElement;
     speakAgainButton: HTMLElement;
     viewStatsButton: HTMLElement;
@@ -118,7 +118,7 @@ export class SpellingGame {
       playerNameDisplay: document.getElementById('player-name-display')!,
       levelUpOverlay: document.getElementById('level-up-overlay')!,
       levelUpMessage: document.getElementById('level-up-message')!,
-      startGameButton: document.getElementById('start-game')!,
+      startGameButton: document.getElementById('start-game')! as HTMLButtonElement,
       playAgainButton: document.getElementById('play-again')!,
       speakAgainButton: document.getElementById('speak-again')!,
       viewStatsButton: document.getElementById('view-stats')!,
@@ -225,7 +225,42 @@ export class SpellingGame {
     // Voice preview button
     const previewButton = document.getElementById('preview-voice');
     previewButton?.addEventListener('click', () => {
-      this.previewVoice();
+      this.previewVoice('create');
+    });
+
+    // Edit modal voice settings
+    const editAutoRepeatCheckbox = document.getElementById('edit-auto-repeat') as HTMLInputElement;
+    const editAutoRepeatDelaySection = document.getElementById('edit-auto-repeat-delay-setting');
+    editAutoRepeatCheckbox?.addEventListener('change', () => {
+      if (editAutoRepeatDelaySection) {
+        editAutoRepeatDelaySection.style.display = editAutoRepeatCheckbox.checked
+          ? 'block'
+          : 'none';
+      }
+    });
+
+    const editRateSlider = document.getElementById('edit-rate') as HTMLInputElement;
+    const editRateValue = document.getElementById('edit-rate-value');
+    editRateSlider?.addEventListener('input', () => {
+      if (editRateValue) editRateValue.textContent = editRateSlider.value;
+    });
+
+    const editPitchSlider = document.getElementById('edit-pitch') as HTMLInputElement;
+    const editPitchValue = document.getElementById('edit-pitch-value');
+    editPitchSlider?.addEventListener('input', () => {
+      if (editPitchValue) editPitchValue.textContent = editPitchSlider.value;
+    });
+
+    const editDelaySlider = document.getElementById('edit-auto-repeat-delay') as HTMLInputElement;
+    const editDelayValue = document.getElementById('edit-delay-value');
+    editDelaySlider?.addEventListener('input', () => {
+      if (editDelayValue) editDelayValue.textContent = editDelaySlider.value;
+    });
+
+    // Edit voice preview button
+    const editPreviewButton = document.getElementById('edit-preview-voice');
+    editPreviewButton?.addEventListener('click', () => {
+      this.previewVoice('edit');
     });
   }
 
@@ -306,6 +341,43 @@ export class SpellingGame {
     (document.getElementById('edit-nickname') as HTMLInputElement).value = profile.nickname;
     const editAvatarBtn = document.getElementById('edit-avatar-btn');
     if (editAvatarBtn) editAvatarBtn.textContent = profile.avatar;
+
+    // Populate voice settings
+    const editVoiceSelect = document.getElementById('edit-voice') as HTMLSelectElement;
+    const editRateInput = document.getElementById('edit-rate') as HTMLInputElement;
+    const editPitchInput = document.getElementById('edit-pitch') as HTMLInputElement;
+    const editAutoRepeatCheckbox = document.getElementById('edit-auto-repeat') as HTMLInputElement;
+    const editAutoRepeatDelayInput = document.getElementById(
+      'edit-auto-repeat-delay'
+    ) as HTMLInputElement;
+
+    if (editVoiceSelect) editVoiceSelect.value = profile.preferences.voice.voiceURI;
+    if (editRateInput) {
+      editRateInput.value = profile.preferences.voice.rate.toString();
+      const editRateValue = document.getElementById('edit-rate-value');
+      if (editRateValue) editRateValue.textContent = profile.preferences.voice.rate.toString();
+    }
+    if (editPitchInput) {
+      editPitchInput.value = profile.preferences.voice.pitch.toString();
+      const editPitchValue = document.getElementById('edit-pitch-value');
+      if (editPitchValue) editPitchValue.textContent = profile.preferences.voice.pitch.toString();
+    }
+    if (editAutoRepeatCheckbox) {
+      editAutoRepeatCheckbox.checked = profile.preferences.voice.autoRepeat;
+      // Show/hide delay setting
+      const editAutoRepeatDelaySection = document.getElementById('edit-auto-repeat-delay-setting');
+      if (editAutoRepeatDelaySection) {
+        editAutoRepeatDelaySection.style.display = profile.preferences.voice.autoRepeat
+          ? 'block'
+          : 'none';
+      }
+    }
+    if (editAutoRepeatDelayInput) {
+      editAutoRepeatDelayInput.value = profile.preferences.voice.autoRepeatDelay.toString();
+      const editDelayValue = document.getElementById('edit-delay-value');
+      if (editDelayValue)
+        editDelayValue.textContent = profile.preferences.voice.autoRepeatDelay.toString();
+    }
   }
 
   private closeModal(modal: HTMLElement): void {
@@ -363,7 +435,30 @@ export class SpellingGame {
     const avatarBtn = document.getElementById('edit-avatar-btn');
     const avatar = avatarBtn?.textContent || '👤';
 
-    const result = this.profileManager.updateProfile(email, { nickname, avatar });
+    // Get voice settings
+    const voiceURI = (document.getElementById('edit-voice') as HTMLSelectElement).value;
+    const rate = parseFloat((document.getElementById('edit-rate') as HTMLInputElement).value);
+    const pitch = parseFloat((document.getElementById('edit-pitch') as HTMLInputElement).value);
+    const autoRepeat = (document.getElementById('edit-auto-repeat') as HTMLInputElement).checked;
+    const autoRepeatDelay = parseInt(
+      (document.getElementById('edit-auto-repeat-delay') as HTMLInputElement).value
+    );
+
+    const voiceSettings: VoiceSettings = {
+      voiceURI,
+      rate,
+      pitch,
+      autoRepeat,
+      autoRepeatDelay,
+    };
+
+    const result = this.profileManager.updateProfile(email, {
+      nickname,
+      avatar,
+      preferences: {
+        voice: voiceSettings,
+      },
+    });
 
     if (result.success) {
       this.closeModal(this.elements.editProfileModal);
@@ -593,14 +688,17 @@ export class SpellingGame {
 
   private initializeVoiceSettings(): void {
     const voiceSelect = document.getElementById('profile-voice') as HTMLSelectElement;
-    if (!voiceSelect) return;
+    const editVoiceSelect = document.getElementById('edit-voice') as HTMLSelectElement;
 
     // Wait for voices to load
     const populateVoices = () => {
       const voices = this.audioManager.getQualityEnglishVoices();
-      voiceSelect.innerHTML = voices
+      const options = voices
         .map(voice => `<option value="${voice.voiceURI}">${voice.name} (${voice.lang})</option>`)
         .join('');
+
+      if (voiceSelect) voiceSelect.innerHTML = options;
+      if (editVoiceSelect) editVoiceSelect.innerHTML = options;
     };
 
     // Voices may not be immediately available
@@ -611,7 +709,7 @@ export class SpellingGame {
     speechSynthesis.addEventListener('voiceschanged', populateVoices);
   }
 
-  private previewVoice(): void {
+  private previewVoice(modal: 'create' | 'edit'): void {
     // List of simple preview words
     const previewWords = [
       'hello',
@@ -625,10 +723,11 @@ export class SpellingGame {
     ];
     const randomWord = previewWords[Math.floor(Math.random() * previewWords.length)];
 
-    // Get current voice settings from the form
-    const voiceSelect = document.getElementById('profile-voice') as HTMLSelectElement;
-    const rateInput = document.getElementById('profile-rate') as HTMLInputElement;
-    const pitchInput = document.getElementById('profile-pitch') as HTMLInputElement;
+    // Get current voice settings from the appropriate form
+    const prefix = modal === 'create' ? 'profile-' : 'edit-';
+    const voiceSelect = document.getElementById(`${prefix}voice`) as HTMLSelectElement;
+    const rateInput = document.getElementById(`${prefix}rate`) as HTMLInputElement;
+    const pitchInput = document.getElementById(`${prefix}pitch`) as HTMLInputElement;
 
     if (!voiceSelect || !rateInput || !pitchInput) return;
 
@@ -912,6 +1011,9 @@ export class SpellingGame {
 
     this.phase = 'validating';
     this.elements.wordInput.disabled = true;
+
+    // Stop any ongoing speech and auto-repeat
+    this.audioManager.stop();
 
     // Record the time when answer was submitted (for speed calculation)
     this.answerSubmitTime = Date.now();

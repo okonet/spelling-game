@@ -5,7 +5,6 @@ export class AudioManager {
   private voices: SpeechSynthesisVoice[] = [];
   private voiceSettings: VoiceSettings;
   private autoRepeatTimer: number | null = null;
-  private lastSpokenText: string = '';
 
   constructor(voiceSettings?: VoiceSettings) {
     if (!('speechSynthesis' in window)) {
@@ -25,7 +24,7 @@ export class AudioManager {
   private getDefaultVoiceSettings(): VoiceSettings {
     return {
       voiceURI: '',
-      rate: 0.6,
+      rate: 1.0,
       pitch: 1.0,
       autoRepeat: false,
       autoRepeatDelay: 3,
@@ -88,9 +87,6 @@ export class AudioManager {
       // Cancel any ongoing speech and auto-repeat timer
       this.synth.cancel();
       this.stopAutoRepeat();
-
-      // Store the text for auto-repeat
-      this.lastSpokenText = text;
 
       const utterance = new SpeechSynthesisUtterance(text);
       const voice = this.getPreferredVoice();

@@ -931,9 +931,38 @@ export class SpellingGame {
     this.nextRound();
   }
 
+  private getDifficultyWeightsForLevel(level: number): {
+    easy: number;
+    medium: number;
+    hard: number;
+  } {
+    // Gradual difficulty progression - each level introduces more of the next tier
+    switch (level) {
+      case 1:
+        return { easy: 1.0, medium: 0, hard: 0 }; // 100% easy
+      case 2:
+        return { easy: 0.7, medium: 0.3, hard: 0 }; // Introduce medium
+      case 3:
+        return { easy: 0.5, medium: 0.5, hard: 0 }; // 50/50 easy/medium
+      case 4:
+        return { easy: 0.3, medium: 0.7, hard: 0 }; // Mostly medium
+      case 5:
+        return { easy: 0, medium: 0.8, hard: 0.2 }; // Introduce hard
+      case 6:
+        return { easy: 0, medium: 0.6, hard: 0.4 }; // More hard words
+      case 7:
+        return { easy: 0, medium: 0.4, hard: 0.6 }; // Mostly hard
+      case 8:
+        return { easy: 0, medium: 0.2, hard: 0.8 }; // Very hard
+      default:
+        return { easy: 0, medium: 0.1, hard: 0.9 }; // Level 9+: almost all hard
+    }
+  }
+
   private getDifficultyForLevel(level: number): Difficulty {
-    if (level <= 3) return 'easy';
-    if (level <= 6) return 'medium';
+    // Legacy method for display purposes - returns the primary difficulty tier
+    if (level <= 2) return 'easy';
+    if (level <= 5) return 'medium';
     return 'hard';
   }
 
@@ -953,11 +982,13 @@ export class SpellingGame {
       this.saveWordResult(false);
     }
 
-    // Update difficulty based on current level
+    // Update difficulty based on current level (for display)
     this.state.difficulty = this.getDifficultyForLevel(this.state.level);
 
     this.phase = 'speaking';
-    this.state.currentWord = this.wordManager.getNextWord(this.state.difficulty);
+    // Get word with weighted difficulty distribution for gradual progression
+    const weights = this.getDifficultyWeightsForLevel(this.state.level);
+    this.state.currentWord = this.wordManager.getNextWordMixed(weights);
     this.state.currentWordAttempts = [];
     this.currentWordStartTime = Date.now();
     this.state.showCorrectSpelling = false;

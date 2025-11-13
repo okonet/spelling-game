@@ -53,20 +53,52 @@ export class WordManager {
 
     return {
       text: word,
-      difficulty
+      difficulty,
     };
+  }
+
+  /**
+   * Get next word with weighted difficulty distribution
+   * @param weights - Object with difficulty weights (e.g., { easy: 0.7, medium: 0.3, hard: 0 })
+   */
+  getNextWordMixed(weights: { easy: number; medium: number; hard: number }): Word {
+    // Normalize weights to ensure they sum to 1
+    const total = weights.easy + weights.medium + weights.hard;
+    const normalized = {
+      easy: weights.easy / total,
+      medium: weights.medium / total,
+      hard: weights.hard / total,
+    };
+
+    // Random selection based on weights
+    const rand = Math.random();
+    let cumulative = 0;
+    let selectedDifficulty: Difficulty = 'easy';
+
+    for (const [difficulty, weight] of Object.entries(normalized)) {
+      cumulative += weight;
+      if (rand <= cumulative) {
+        selectedDifficulty = difficulty as Difficulty;
+        break;
+      }
+    }
+
+    return this.getNextWord(selectedDifficulty);
   }
 
   /**
    * Create a weighted shuffled list prioritizing words that need practice
    */
-  private createWeightedShuffledList(difficulty: Difficulty, performanceMap: WordPerformanceMap): string[] {
+  private createWeightedShuffledList(
+    difficulty: Difficulty,
+    performanceMap: WordPerformanceMap
+  ): string[] {
     const wordList = [...this.words[difficulty]];
 
     // Calculate priority score for each word
     const wordScores = wordList.map(word => ({
       word,
-      score: this.calculatePriorityScore(word, performanceMap)
+      score: this.calculatePriorityScore(word, performanceMap),
     }));
 
     // Sort by score (higher score = needs more practice = should appear earlier)
@@ -104,8 +136,8 @@ export class WordManager {
     score -= perf.timesCorrectFirstTry * 30;
 
     // HIGH PRIORITY: Words with mistakes and timeouts need maximum repetition
-    score += perf.timesTimeout * 100;   // Timeouts = word not memorized at all
-    score += perf.timesMistakes * 80;   // Mistakes = word partially learned but needs work
+    score += perf.timesTimeout * 100; // Timeouts = word not memorized at all
+    score += perf.timesMistakes * 80; // Mistakes = word partially learned but needs work
 
     // Calculate success rate - if low, boost priority even more
     const totalAttempts = perf.totalAttempts;

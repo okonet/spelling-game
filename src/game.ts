@@ -1167,22 +1167,23 @@ export class SpellingGame {
     const tierText = tierMessages[tier];
     const totalMultiplier = speedMultiplier * comboMultiplier;
 
-    // Build compact multiplier display with emojis
+    // Build formula display showing full calculation
     let multiplierText = '';
     if (totalMultiplier > 1.0) {
+      // Calculate base points
+      const basePoints = Math.round(finalPoints / totalMultiplier);
+
+      // Build formula with emoji indicators: ⚡speedMultiplier × 🔥comboMultiplier × basePoints = finalPoints pts
       const parts = [];
       if (speedMultiplier > 1.0) {
-        parts.push(`⚡${speedMultiplier}×`);
+        parts.push(`⚡${speedMultiplier.toFixed(1)}`);
       }
       if (comboMultiplier > 1.0) {
-        parts.push(`🔥${comboMultiplier}×`);
+        parts.push(`🔥${comboMultiplier.toFixed(1)}`);
       }
-      const bonusText = parts.join(' · ');
+      parts.push(`${basePoints}`);
 
-      // Show combo count if active
-      const comboCount = this.state.comboCount > 1 ? ` (${this.state.comboCount} combo)` : '';
-
-      multiplierText = `${bonusText} = ${totalMultiplier.toFixed(1)}×${comboCount}\n+${finalPoints}pts`;
+      multiplierText = `${parts.join(' × ')} = ${finalPoints}pts`;
     } else {
       const comboCount = this.state.comboCount > 1 ? ` 🔥${this.state.comboCount}` : '';
       multiplierText = `+${finalPoints}pts${comboCount}`;

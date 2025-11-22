@@ -203,33 +203,25 @@ describe('Scoring System', () => {
     it('should demonstrate score growth as player improves', () => {
       // Beginner: slow answer, no combo
       const beginner = Math.round(
-        calculateBaseScore(1) *
-        calculateSpeedMultiplier(4500, 5000) *
-        calculateComboMultiplier(0)
+        calculateBaseScore(1) * calculateSpeedMultiplier(4500, 5000) * calculateComboMultiplier(0)
       );
       expect(beginner).toBe(20); // 20 × 1.0 × 1.0 = 20
 
       // Improving: faster answer, small combo
       const improving = Math.round(
-        calculateBaseScore(1) *
-        calculateSpeedMultiplier(3000, 5000) *
-        calculateComboMultiplier(2)
+        calculateBaseScore(1) * calculateSpeedMultiplier(3000, 5000) * calculateComboMultiplier(2)
       );
       expect(improving).toBe(28); // 20 × 1.25 × 1.1 = 27.5 ≈ 28
 
       // Skilled: fast answer, good combo
       const skilled = Math.round(
-        calculateBaseScore(1) *
-        calculateSpeedMultiplier(2000, 5000) *
-        calculateComboMultiplier(4)
+        calculateBaseScore(1) * calculateSpeedMultiplier(2000, 5000) * calculateComboMultiplier(4)
       );
       expect(skilled).toBe(39); // 20 × 1.5 × 1.3 = 39
 
       // Expert: lightning fast, max combo
       const expert = Math.round(
-        calculateBaseScore(1) *
-        calculateSpeedMultiplier(1200, 5000) *
-        calculateComboMultiplier(5)
+        calculateBaseScore(1) * calculateSpeedMultiplier(1200, 5000) * calculateComboMultiplier(5)
       );
       expect(expert).toBe(60); // 20 × 2.0 × 1.5 = 60
 
@@ -251,10 +243,10 @@ describe('Scoring System', () => {
       const combo3 = Math.round(baseScore * speedMult * calculateComboMultiplier(3));
       const combo5 = Math.round(baseScore * speedMult * calculateComboMultiplier(5));
 
-      expect(noCombo).toBe(30);  // 20 × 1.5 × 1.0 = 30
-      expect(combo2).toBe(33);   // 20 × 1.5 × 1.1 = 33
-      expect(combo3).toBe(36);   // 20 × 1.5 × 1.2 = 36
-      expect(combo5).toBe(45);   // 20 × 1.5 × 1.5 = 45
+      expect(noCombo).toBe(30); // 20 × 1.5 × 1.0 = 30
+      expect(combo2).toBe(33); // 20 × 1.5 × 1.1 = 33
+      expect(combo3).toBe(36); // 20 × 1.5 × 1.2 = 36
+      expect(combo5).toBe(45); // 20 × 1.5 × 1.5 = 45
 
       // Each combo level adds meaningful points
       expect(combo2).toBeGreaterThan(noCombo);

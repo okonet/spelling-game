@@ -802,6 +802,14 @@ export class SpellingGame {
       });
     }
 
+    // Manage words button
+    const manageWordsButton = document.getElementById('manage-words');
+    if (manageWordsButton) {
+      manageWordsButton.addEventListener('click', () => {
+        window.location.href = '/words.html';
+      });
+    }
+
     // Quit game button
     this.elements.quitButton.addEventListener('click', () => {
       if (confirm('Are you sure you want to quit? Your progress will be saved.')) {

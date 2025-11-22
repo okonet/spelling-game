@@ -18,7 +18,7 @@ function createWordResult(partial: Partial<WordResult> & { word: string }): Word
     level: 1,
     timedOut: false,
     attempts: [{ spelling: partial.word, correct: true, timestamp: now }],
-    ...partial
+    ...partial,
   };
 }
 
@@ -122,16 +122,16 @@ describe('SessionManager', () => {
         word: 'cat',
         attempts: [
           { spelling: 'kat', correct: false, timestamp: Date.now() },
-          { spelling: 'cat', correct: true, timestamp: Date.now() }
+          { spelling: 'cat', correct: true, timestamp: Date.now() },
         ],
-        scoreEarned: 10
+        scoreEarned: 10,
       });
       sessionManager.updateWordPerformance('Alice', wordResult1);
 
       // Player 2 masters 'cat' on first try
       const wordResult2 = createWordResult({
         word: 'cat',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
       sessionManager.updateWordPerformance('Bob', wordResult2);
 
@@ -151,7 +151,7 @@ describe('SessionManager', () => {
     it('should track correct first try', () => {
       const wordResult = createWordResult({
         word: 'dog',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       sessionManager.updateWordPerformance('Charlie', wordResult);
@@ -169,10 +169,10 @@ describe('SessionManager', () => {
         attempts: [
           { spelling: 'dificult', correct: false, timestamp: Date.now() },
           { spelling: 'difficalt', correct: false, timestamp: Date.now() },
-          { spelling: 'difficult', correct: true, timestamp: Date.now() }
+          { spelling: 'difficult', correct: true, timestamp: Date.now() },
         ],
         scoreEarned: 5,
-        level: 2
+        level: 2,
       });
 
       sessionManager.updateWordPerformance('Diana', wordResult);
@@ -190,7 +190,7 @@ describe('SessionManager', () => {
         attempts: [],
         scoreEarned: 0,
         timedOut: true,
-        level: 3
+        level: 3,
       });
 
       sessionManager.updateWordPerformance('Eve', wordResult);
@@ -210,10 +210,10 @@ describe('SessionManager', () => {
         word: 'house',
         attempts: [
           { spelling: 'hose', correct: false, timestamp: Date.now() },
-          { spelling: 'house', correct: true, timestamp: Date.now() }
+          { spelling: 'house', correct: true, timestamp: Date.now() },
         ],
         scoreEarned: 10,
-        level: 1
+        level: 1,
       });
       sessionManager.updateWordPerformance(playerName, attempt1);
 
@@ -223,7 +223,7 @@ describe('SessionManager', () => {
         attempts: [],
         scoreEarned: 0,
         timedOut: true,
-        level: 2
+        level: 2,
       });
       sessionManager.updateWordPerformance(playerName, attempt2);
 
@@ -231,7 +231,7 @@ describe('SessionManager', () => {
       const attempt3 = createWordResult({
         word: 'house',
         scoreEarned: 20,
-        level: 3
+        level: 3,
       });
       sessionManager.updateWordPerformance(playerName, attempt3);
 
@@ -245,7 +245,7 @@ describe('SessionManager', () => {
     it('should handle case-insensitive word tracking', () => {
       const wordResult = createWordResult({
         word: 'CAT',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       sessionManager.updateWordPerformance('Grace', wordResult);
@@ -259,7 +259,7 @@ describe('SessionManager', () => {
     it('should update lastSeen timestamp on each attempt', () => {
       const wordResult = createWordResult({
         word: 'test',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       const beforeTime = Date.now();
@@ -275,7 +275,7 @@ describe('SessionManager', () => {
       // Add performance for two players
       const wordResult = createWordResult({
         word: 'shared',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       sessionManager.updateWordPerformance('Ivan', wordResult);
@@ -296,7 +296,7 @@ describe('SessionManager', () => {
     it('should clear all performance data when no player specified', () => {
       const wordResult = createWordResult({
         word: 'test',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       sessionManager.updateWordPerformance('Player1', wordResult);
@@ -311,12 +311,12 @@ describe('SessionManager', () => {
     it('should get all players performance data', () => {
       const wordResult1 = createWordResult({
         word: 'cat',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       const wordResult2 = createWordResult({
         word: 'dog',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       sessionManager.updateWordPerformance('Kevin', wordResult1);
@@ -337,7 +337,7 @@ describe('SessionManager', () => {
       // Sibling 1 (younger, struggles with 'difficult' words)
       const sibling1Word1 = createWordResult({
         word: 'cat',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       const sibling1Word2 = createWordResult({
@@ -345,7 +345,7 @@ describe('SessionManager', () => {
         attempts: [],
         scoreEarned: 0,
         timedOut: true,
-        level: 2
+        level: 2,
       });
 
       sessionManager.updateWordPerformance('Emma', sibling1Word1);
@@ -354,12 +354,12 @@ describe('SessionManager', () => {
       // Sibling 2 (older, masters both words)
       const sibling2Word1 = createWordResult({
         word: 'cat',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       const sibling2Word2 = createWordResult({
         word: 'elephant',
-        scoreEarned: 20
+        scoreEarned: 20,
       });
 
       sessionManager.updateWordPerformance('Liam', sibling2Word1);
@@ -387,23 +387,23 @@ describe('SessionManager', () => {
       const wordResults: WordResult[] = [
         createWordResult({
           word: 'apple',
-          scoreEarned: 20
+          scoreEarned: 20,
         }),
         createWordResult({
           word: 'banana',
           attempts: [
             { spelling: 'bananna', correct: false, timestamp: Date.now() },
-            { spelling: 'banana', correct: true, timestamp: Date.now() }
+            { spelling: 'banana', correct: true, timestamp: Date.now() },
           ],
-          scoreEarned: 10
+          scoreEarned: 10,
         }),
         createWordResult({
           word: 'cherry',
           attempts: [],
           scoreEarned: 0,
           timedOut: true,
-          level: 2
-        })
+          level: 2,
+        }),
       ];
 
       wordResults.forEach(result => {

@@ -17,6 +17,7 @@ This is a browser-based educational spelling game built for children to learn En
 ### Core Game Loop
 
 The game follows this sequence:
+
 1. **Word Selection** (`WordManager`) - Randomly selects a word based on difficulty level
 2. **Speech** (`AudioManager`) - Speaks the word using Web Speech API
 3. **User Input** - Player types the word and presses Enter
@@ -48,6 +49,7 @@ When adjusting timing, all three components (CSS animation duration, character p
 ### Word Management
 
 Words are stored in two places:
+
 1. **Default words** - Hard-coded in `src/words.ts` by difficulty
 2. **Custom words** - Optional JSON file at `/public/words.json` (merged with defaults)
 
@@ -56,6 +58,7 @@ The `WordManager` tracks used words to avoid repetition within a session.
 ### Animation System
 
 The character has three animation states:
+
 - `run` - Continuous subtle bounce (0.3s infinite loop)
 - `jumping` - 0.8s jump animation triggered on correct answer
 - `crashing` - 0.6s crash animation with rotation on incorrect answer
@@ -65,6 +68,7 @@ Obstacles always slide from right to left using the `slideLeft` animation. The c
 ## Speech Synthesis
 
 The game uses Web Speech API with these settings:
+
 - **Rate**: 0.6 (slow for clarity)
 - **Voice priority**: Looks for Google/Microsoft/Apple voices first, falls back to any English voice
 - **Console logging**: Voice selection is logged to help debug speech issues
@@ -72,6 +76,7 @@ The game uses Web Speech API with these settings:
 ## State Management
 
 Game state is managed in a single `GameState` object containing:
+
 - Current word, score, lives (starts at 5)
 - Game phase tracking (idle, speaking, waiting-input, validating, jumping, crashing, game-over)
 - Input validation state

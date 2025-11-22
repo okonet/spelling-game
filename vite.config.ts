@@ -1,16 +1,17 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   server: {
-    open: true
+    open: true,
   },
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        stats: resolve(__dirname, 'stats.html')
-      }
-    }
-  }
-})
+        stats: resolve(__dirname, 'stats.html'),
+        words: resolve(__dirname, 'words.html'),
+      },
+    },
+  },
+});

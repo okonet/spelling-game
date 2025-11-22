@@ -21,14 +21,14 @@ describe('WordManager', () => {
 
     it('should heavily prioritize words with timeouts (+100 per timeout)', () => {
       const performanceMap: WordPerformanceMap = {
-        'difficult': {
+        difficult: {
           word: 'difficult',
           timesCorrectFirstTry: 0,
           timesMistakes: 0,
           timesTimeout: 2,
           totalAttempts: 2,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
       };
 
       // @ts-ignore
@@ -40,14 +40,14 @@ describe('WordManager', () => {
 
     it('should heavily prioritize words with mistakes (+80 per mistake)', () => {
       const performanceMap: WordPerformanceMap = {
-        'tricky': {
+        tricky: {
           word: 'tricky',
           timesCorrectFirstTry: 0,
           timesMistakes: 3,
           timesTimeout: 0,
           totalAttempts: 3,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
       };
 
       // @ts-ignore
@@ -59,14 +59,14 @@ describe('WordManager', () => {
 
     it('should penalize mastered words (-30 per correct first try)', () => {
       const performanceMap: WordPerformanceMap = {
-        'easy': {
+        easy: {
           word: 'easy',
           timesCorrectFirstTry: 5,
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 5,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
       };
 
       // @ts-ignore
@@ -78,14 +78,14 @@ describe('WordManager', () => {
 
     it('should boost priority (+50) for words with low success rate (<50%)', () => {
       const performanceMap: WordPerformanceMap = {
-        'struggling': {
+        struggling: {
           word: 'struggling',
           timesCorrectFirstTry: 1,
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 3,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
       };
 
       // @ts-ignore
@@ -96,16 +96,16 @@ describe('WordManager', () => {
     });
 
     it('should slightly boost priority for words not seen recently (+3 per day, max +15)', () => {
-      const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
+      const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000;
       const performanceMap: WordPerformanceMap = {
-        'forgotten': {
+        forgotten: {
           word: 'forgotten',
           timesCorrectFirstTry: 0,
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 0,
-          lastSeen: threeDaysAgo
-        }
+          lastSeen: threeDaysAgo,
+        },
       };
 
       // @ts-ignore
@@ -123,7 +123,7 @@ describe('WordManager', () => {
           timesMistakes: 0,
           timesTimeout: 3,
           totalAttempts: 3,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
         },
         'mistake-word': {
           word: 'mistake-word',
@@ -131,7 +131,7 @@ describe('WordManager', () => {
           timesMistakes: 3,
           timesTimeout: 0,
           totalAttempts: 3,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
         },
         'mastered-word': {
           word: 'mastered-word',
@@ -139,8 +139,8 @@ describe('WordManager', () => {
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 10,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
       };
 
       // @ts-ignore
@@ -170,34 +170,34 @@ describe('WordManager', () => {
       wordManager['words'] = {
         easy: ['cat', 'dog', 'sun', 'bed', 'car'],
         medium: [],
-        hard: []
+        hard: [],
       };
 
       const performanceMap: WordPerformanceMap = {
-        'cat': {
+        cat: {
           word: 'cat',
           timesCorrectFirstTry: 5,
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 5,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
         },
-        'dog': {
+        dog: {
           word: 'dog',
           timesCorrectFirstTry: 0,
           timesMistakes: 3,
           timesTimeout: 0,
           totalAttempts: 3,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
         },
-        'sun': {
+        sun: {
           word: 'sun',
           timesCorrectFirstTry: 0,
           timesMistakes: 0,
           timesTimeout: 2,
           totalAttempts: 2,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
         // 'bed' and 'car' never seen (priority 1000 each)
       };
 
@@ -244,7 +244,7 @@ describe('WordManager', () => {
       wordManager['words'] = {
         easy: ['cat', 'dog'],
         medium: [],
-        hard: []
+        hard: [],
       };
 
       wordManager.initializeSessionWords({});
@@ -264,7 +264,7 @@ describe('WordManager', () => {
       wordManager['words'] = {
         easy: ['cat', 'dog'],
         medium: ['house', 'table'],
-        hard: ['beautiful', 'elephant']
+        hard: ['beautiful', 'elephant'],
       };
 
       wordManager.initializeSessionWords({});
@@ -283,7 +283,7 @@ describe('WordManager', () => {
       wordManager['words'] = {
         easy: ['cat', 'dog'],
         medium: [],
-        hard: []
+        hard: [],
       };
 
       wordManager.initializeSessionWords({});
@@ -302,7 +302,7 @@ describe('WordManager', () => {
       wordManager['words'] = {
         easy: ['cat', 'dog', 'sun'],
         medium: [],
-        hard: []
+        hard: [],
       };
 
       // Session 1: First time playing
@@ -312,7 +312,7 @@ describe('WordManager', () => {
       const session1Words = [
         wordManager.getNextWord('easy').text,
         wordManager.getNextWord('easy').text,
-        wordManager.getNextWord('easy').text
+        wordManager.getNextWord('easy').text,
       ];
 
       // All words should appear (all have priority 1000)
@@ -322,30 +322,30 @@ describe('WordManager', () => {
 
       // Session 2: Player struggled with 'dog'
       const session2Performance: WordPerformanceMap = {
-        'cat': {
+        cat: {
           word: 'cat',
           timesCorrectFirstTry: 1,
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 1,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
         },
-        'dog': {
+        dog: {
           word: 'dog',
           timesCorrectFirstTry: 0,
           timesMistakes: 1,
           timesTimeout: 0,
           totalAttempts: 1,
-          lastSeen: Date.now()
+          lastSeen: Date.now(),
         },
-        'sun': {
+        sun: {
           word: 'sun',
           timesCorrectFirstTry: 1,
           timesMistakes: 0,
           timesTimeout: 0,
           totalAttempts: 1,
-          lastSeen: Date.now()
-        }
+          lastSeen: Date.now(),
+        },
       };
 
       wordManager.resetSession();
@@ -354,7 +354,7 @@ describe('WordManager', () => {
       const session2Words = [
         wordManager.getNextWord('easy').text,
         wordManager.getNextWord('easy').text,
-        wordManager.getNextWord('easy').text
+        wordManager.getNextWord('easy').text,
       ];
 
       // Calculate priority scores to verify 'dog' has highest priority

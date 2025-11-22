@@ -554,6 +554,26 @@ body {
   box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
 }
 
+.manage-words-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.manage-words-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
 .difficulty-selector {
   display: flex;
   gap: 20px;

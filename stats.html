@@ -1,31 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spelling Game - Statistics</title>
-</head>
-<body>
-  <div class="stats-container">
-    <div class="stats-header">
-      <h1 class="stats-title">📊 Player Statistics</h1>
-      <button id="back-to-game" class="nav-btn">🎮 Back to Game</button>
-    </div>
-
-    <div class="stats-controls">
-      <div class="filter-section">
-        <label for="player-filter">Select player:</label>
-        <select id="player-filter" class="player-filter">
-        </select>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spelling Game - Statistics</title>
+  </head>
+  <body>
+    <div class="stats-container">
+      <div class="stats-header">
+        <h1 class="stats-title">📊 Player Statistics</h1>
+        <button id="back-to-game" class="nav-btn">🎮 Back to Game</button>
       </div>
-      <button id="clear-data" class="danger-btn">🗑️ Clear All Data</button>
+
+      <div class="stats-controls">
+        <div class="filter-section">
+          <label for="player-filter">Select player:</label>
+          <select id="player-filter" class="player-filter"></select>
+        </div>
+        <button id="clear-data" class="danger-btn">🗑️ Clear All Data</button>
+      </div>
+
+      <div id="stats-content" class="stats-content">
+        <p class="no-data-message">No game sessions found. Play some games first!</p>
+      </div>
     </div>
 
-    <div id="stats-content" class="stats-content">
-      <p class="no-data-message">No game sessions found. Play some games first!</p>
-    </div>
-  </div>
-
-  <script type="module" src="/src/stats.ts"></script>
-</body>
+    <script type="module" src="/src/stats.ts"></script>
+  </body>
 </html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spelling Game - Word Manager</title>
+  </head>
+  <body>
+    <div class="word-manager-container">
+      <div class="word-manager-header">
+        <h1 class="word-manager-title">📝 Word Manager</h1>
+        <button id="back-to-menu" class="nav-btn">🏠 Back to Menu</button>
+      </div>
+
+      <div class="word-manager-info">
+        <p>
+          Manage your custom word lists for each difficulty level. Enter one word per line. Changes
+          are saved to your browser's local storage.
+        </p>
+      </div>
+
+      <div class="word-manager-controls">
+        <button id="save-words" class="btn-primary">💾 Save Changes</button>
+        <button id="reset-words" class="btn-secondary">🔄 Reset to Defaults</button>
+      </div>
+
+      <div id="word-lists" class="word-lists">
+        <!-- Easy Words -->
+        <div class="word-list-section">
+          <div class="word-list-header">
+            <h2 class="word-list-title">
+              🟢 Easy Words
+              <span id="easy-count" class="word-count">(0)</span>
+            </h2>
+          </div>
+          <textarea
+            id="easy-words"
+            class="word-textarea"
+            placeholder="Enter easy words, one per line..."
+            rows="10"
+          ></textarea>
+        </div>
+
+        <!-- Medium Words -->
+        <div class="word-list-section">
+          <div class="word-list-header">
+            <h2 class="word-list-title">
+              🟡 Medium Words
+              <span id="medium-count" class="word-count">(0)</span>
+            </h2>
+          </div>
+          <textarea
+            id="medium-words"
+            class="word-textarea"
+            placeholder="Enter medium words, one per line..."
+            rows="10"
+          ></textarea>
+        </div>
+
+        <!-- Hard Words -->
+        <div class="word-list-section">
+          <div class="word-list-header">
+            <h2 class="word-list-title">
+              🔴 Hard Words
+              <span id="hard-count" class="word-count">(0)</span>
+            </h2>
+          </div>
+          <textarea
+            id="hard-words"
+            class="word-textarea"
+            placeholder="Enter hard words, one per line..."
+            rows="10"
+          ></textarea>
+        </div>
+      </div>
+
+      <div id="status-message" class="status-message hidden"></div>
+    </div>
+
+    <script type="module" src="/src/wordManager.ts"></script>
+  </body>
+</html>

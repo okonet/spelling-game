@@ -37,7 +37,8 @@ The game features an **automatic level progression system**:
 - **Level-up celebrations**: Cinematic effects with confetti and triumphant sound when reaching a new level
 - **Session tracking**: Track performance with player name, level progression, and detailed word-by-word results
 - **Statistics page**: View past game sessions, player-specific progress charts, and analyze improvement
-- **Customizable word lists**: Easy to add your own words via JSON file
+- **Word Manager**: User-friendly interface to customize word lists for each difficulty level with localStorage persistence
+- **Customizable word lists**: Easy to add your own words via Word Manager UI or JSON file
 
 ## Getting Started
 
@@ -49,17 +50,20 @@ The game features an **automatic level progression system**:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd spelling-game
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -101,6 +105,7 @@ spelling-game/
 ### Timing System
 
 The time available to spell each word decreases as you progress:
+
 - **Level 1**: 5000ms (5 seconds)
 - **Level 2**: 4700ms (4.7 seconds)
 - **Level 3**: 4400ms (4.4 seconds)
@@ -109,6 +114,7 @@ The time available to spell each word decreases as you progress:
 ### Scoring System
 
 Points are awarded based on the number of attempts:
+
 - **First attempt**: 20 points
 - **Second attempt**: 10 points
 - **Third attempt**: 5 points
@@ -118,6 +124,7 @@ Points are awarded based on the number of attempts:
 ### Session Tracking
 
 All game sessions are saved to localStorage and include:
+
 - Player name and timestamp
 - Level progression during the session
 - Score and lives remaining
@@ -134,12 +141,14 @@ The game uses an intelligent word selection algorithm that adapts to each player
 **Per-Player Tracking**: Each player has their own word performance history, so multiple children can use the game without affecting each other's learning progress.
 
 **Smart Prioritization**: Words are prioritized based on:
+
 - **Highest Priority**: Words with mistakes or timeouts (appear very frequently)
 - **High Priority**: Words never seen before
 - **Medium Priority**: Words with low success rate (<50%)
 - **Lower Priority**: Words spelled correctly on first try (appear less often)
 
 **Scoring System**:
+
 - Timeouts: +100 priority points (needs most practice)
 - Mistakes: +80 priority points (needs practice)
 - Correct first try: -30 priority points (mastered)
@@ -150,9 +159,25 @@ This ensures struggling words are repeated frequently until mastered, maximizing
 
 **Data Structure**: Designed for easy migration to a real database (IndexedDB or server-side) in the future.
 
-## Customizing Word Lists
+## Managing Word Lists
 
-All words are stored in `/public/words.json`. You can customize the word lists by editing this file:
+The game provides two ways to customize word lists:
+
+### 1. Word Manager UI (Recommended)
+
+Access the **Word Manager** from the main menu to manage custom word lists:
+
+- **Easy to use**: Edit words for each difficulty level using a simple textarea interface (one word per line)
+- **Real-time word count**: See the number of words as you type
+- **Persistent storage**: Changes are saved to browser's localStorage
+- **Reset capability**: Restore default words at any time
+- **Migration-ready**: Data structure designed for easy migration to a database
+
+Custom words are stored in localStorage and take precedence over default words. This allows each user to have their own personalized word lists without modifying the source files.
+
+### 2. Default Word Lists (File-based)
+
+Default words are stored in `/public/words.json` and can be edited directly:
 
 ```json
 {
@@ -163,9 +188,10 @@ All words are stored in `/public/words.json`. You can customize the word lists b
 ```
 
 The game includes:
-- **Easy**: 100+ simple words (3-4 letters) - nouns, verbs, and adjectives
-- **Medium**: 100+ intermediate words (5-7 letters) - diverse vocabulary
-- **Hard**: 180+ challenging words - commonly misspelled words and advanced vocabulary
+
+- **Easy**: 119 simple words (3-4 letters) - nouns, verbs, and adjectives
+- **Medium**: 152 intermediate words (5-7 letters) - diverse vocabulary
+- **Hard**: 215 challenging words - commonly misspelled words and advanced vocabulary
 
 ## Technologies Used
 
@@ -178,6 +204,7 @@ The game includes:
 ## Browser Compatibility
 
 The game requires a modern browser with support for:
+
 - Web Speech API (for text-to-speech)
 - ES2020+ JavaScript features
 - CSS animations

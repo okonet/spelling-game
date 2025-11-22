@@ -1,5 +1,7 @@
 import type { WordConfig, Word, Difficulty, WordPerformanceMap } from './types';
 
+const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
+
 export class WordManager {
   private words: WordConfig = { easy: [], medium: [], hard: [] };
   private sessionWordLists: Map<Difficulty, string[]> = new Map();
@@ -7,11 +9,31 @@ export class WordManager {
 
   async loadWords(url: string = '/words.json'): Promise<void> {
     try {
+      // First, check localStorage for custom words
+      const customWordsJson = localStorage.getItem(CUSTOM_WORDS_KEY);
+      if (customWordsJson) {
+        try {
+          const customWords = JSON.parse(customWordsJson);
+          this.words = {
+            easy: customWords.easy || [],
+            medium: customWords.medium || [],
+            hard: customWords.hard || [],
+          };
+          console.log('Loaded custom words from localStorage');
+          return;
+        } catch (error) {
+          console.error('Failed to parse custom words from localStorage', error);
+          // Fall through to load default words
+        }
+      }
+
+      // Load default words from JSON file
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to load words: ${response.statusText}`);
       }
       this.words = await response.json();
+      console.log('Loaded default words from JSON file');
     } catch (error) {
       console.error('Could not load words from JSON file', error);
       throw error;

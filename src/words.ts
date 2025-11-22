@@ -14,15 +14,39 @@ export class WordManager {
       if (customWordsJson) {
         try {
           const customWords = JSON.parse(customWordsJson);
+
+          // Validate the structure and data types
+          if (
+            !customWords ||
+            typeof customWords !== 'object' ||
+            !Array.isArray(customWords.easy) ||
+            !Array.isArray(customWords.medium) ||
+            !Array.isArray(customWords.hard)
+          ) {
+            throw new Error('Invalid custom words structure');
+          }
+
+          // Validate that all elements are strings
+          const isValidArray = (arr: unknown[]): arr is string[] =>
+            arr.every(item => typeof item === 'string');
+
+          if (
+            !isValidArray(customWords.easy) ||
+            !isValidArray(customWords.medium) ||
+            !isValidArray(customWords.hard)
+          ) {
+            throw new Error('Custom words must be arrays of strings');
+          }
+
           this.words = {
-            easy: customWords.easy || [],
-            medium: customWords.medium || [],
-            hard: customWords.hard || [],
+            easy: customWords.easy,
+            medium: customWords.medium,
+            hard: customWords.hard,
           };
           console.log('Loaded custom words from localStorage');
           return;
         } catch (error) {
-          console.error('Failed to parse custom words from localStorage', error);
+          console.error('Failed to parse or validate custom words from localStorage', error);
           // Fall through to load default words
         }
       }

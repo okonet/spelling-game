@@ -123,8 +123,16 @@ class WordManagerUI {
     const hardWords = this.parseTextareaWords(hardTextarea);
 
     // Validate that each difficulty has at least some words
-    if (easyWords.length === 0 || mediumWords.length === 0 || hardWords.length === 0) {
-      this.showStatus('Error: Each difficulty level must have at least one word', true);
+    const emptyLevels: string[] = [];
+    if (easyWords.length === 0) emptyLevels.push('Easy');
+    if (mediumWords.length === 0) emptyLevels.push('Medium');
+    if (hardWords.length === 0) emptyLevels.push('Hard');
+
+    if (emptyLevels.length > 0) {
+      this.showStatus(
+        `Error: ${emptyLevels.join(', ')} difficulty level(s) must have at least one word`,
+        true
+      );
       return;
     }
 

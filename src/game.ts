@@ -18,6 +18,8 @@ import { ProfileManager } from './profileManager';
 const DEFAULT_GAME_SPEED = 1.0;
 const MIN_GAME_SPEED = 0.5;
 const MAX_GAME_SPEED = 1.5;
+const WORD_LENGTH_BONUS_PER_CHAR = 150; // Additional time (ms) per character for longer words
+const WORD_LENGTH_BONUS_THRESHOLD = 4; // Words longer than this get extra time
 
 export class SpellingGame {
   private state: GameState;
@@ -1026,8 +1028,6 @@ export class SpellingGame {
     const baseSpeed = 8000;
     const speedDecrease = 400;
     const minSpeed = 2500;
-    const wordLengthBonusPerChar = 150; // Additional time per character for longer words
-    const wordLengthBonusThreshold = 4; // Words longer than this get extra time
     let calculatedSpeed = Math.max(minSpeed, baseSpeed - (level - 1) * speedDecrease);
 
     // Apply user's game speed preference (0.5 = slower/more time, 1.5 = faster/less time)
@@ -1038,9 +1038,9 @@ export class SpellingGame {
     calculatedSpeed = calculatedSpeed / userGameSpeed;
 
     // Adjust for word length: longer words get proportionally more time
-    // Add wordLengthBonusPerChar per character beyond wordLengthBonusThreshold
-    if (wordLength && wordLength > wordLengthBonusThreshold) {
-      const lengthBonus = (wordLength - wordLengthBonusThreshold) * wordLengthBonusPerChar;
+    // Add WORD_LENGTH_BONUS_PER_CHAR per character beyond WORD_LENGTH_BONUS_THRESHOLD
+    if (wordLength && wordLength > WORD_LENGTH_BONUS_THRESHOLD) {
+      const lengthBonus = (wordLength - WORD_LENGTH_BONUS_THRESHOLD) * WORD_LENGTH_BONUS_PER_CHAR;
       calculatedSpeed = calculatedSpeed + lengthBonus;
     }
 

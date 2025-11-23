@@ -414,9 +414,11 @@ export class SpellingGame {
     const avatar = avatarBtn?.textContent || '👤';
     const difficulty = (document.getElementById('profile-difficulty') as HTMLSelectElement)
       .value as Difficulty;
-    const gameSpeed = parseFloat(
+    let gameSpeed = parseFloat(
       (document.getElementById('profile-game-speed') as HTMLInputElement).value
     );
+    // Validate and clamp to safe range (0.5-1.5)
+    gameSpeed = Math.max(0.5, Math.min(1.5, isNaN(gameSpeed) ? 1.0 : gameSpeed));
 
     const voiceURI = (document.getElementById('profile-voice') as HTMLSelectElement).value;
     const rate = parseFloat((document.getElementById('profile-rate') as HTMLInputElement).value);
@@ -461,9 +463,11 @@ export class SpellingGame {
     const nickname = (document.getElementById('edit-nickname') as HTMLInputElement).value.trim();
     const avatarBtn = document.getElementById('edit-avatar-btn');
     const avatar = avatarBtn?.textContent || '👤';
-    const gameSpeed = parseFloat(
+    let gameSpeed = parseFloat(
       (document.getElementById('edit-game-speed') as HTMLInputElement).value
     );
+    // Validate and clamp to safe range (0.5-1.5)
+    gameSpeed = Math.max(0.5, Math.min(1.5, isNaN(gameSpeed) ? 1.0 : gameSpeed));
 
     // Get voice settings
     const voiceURI = (document.getElementById('edit-voice') as HTMLSelectElement).value;
@@ -1015,7 +1019,9 @@ export class SpellingGame {
 
     // Apply user's game speed preference (0.5 = slower, 1.5 = faster)
     // Lower gameSpeed value = more time (divide), higher = less time (divide by larger number)
-    const userGameSpeed = this.state.currentProfile?.preferences.gameSpeed ?? 1.0;
+    let userGameSpeed = this.state.currentProfile?.preferences.gameSpeed ?? 1.0;
+    // Validate and clamp to safe range
+    userGameSpeed = Math.max(0.5, Math.min(1.5, userGameSpeed));
     calculatedSpeed = calculatedSpeed / userGameSpeed;
 
     // Adjust for word length: longer words get more time

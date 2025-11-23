@@ -520,5 +520,36 @@ describe('WordManager', () => {
       expect(word.text).toBe('cat');
       expect(word.description).toBe('a small furry pet');
     });
+
+    it('should handle empty description after separator', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat - '],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toBe('cat');
+      expect(word.description).toBeUndefined();
+    });
+
+    it('should handle invalid entry with empty text before separator', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: [' - a description'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      // Should fall back to using the original entry
+      expect(word.text).toBe(' - a description');
+      expect(word.description).toBeUndefined();
+    });
   });
 });

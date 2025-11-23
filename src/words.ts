@@ -1,6 +1,7 @@
 import type { WordConfig, Word, Difficulty, WordPerformanceMap } from './types';
 
 const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
+const DESCRIPTION_SEPARATOR = ' - '; // Separator between word and description
 
 export class WordManager {
   private words: WordConfig = { easy: [], medium: [], hard: [] };
@@ -83,16 +84,23 @@ export class WordManager {
    * Example: "cat - a small furry pet" returns { text: "cat", description: "a small furry pet" }
    */
   private parseWordEntry(entry: string): { text: string; description?: string } {
-    const separatorIndex = entry.indexOf(' - ');
+    const separatorIndex = entry.indexOf(DESCRIPTION_SEPARATOR);
     if (separatorIndex === -1) {
       // No description, return word as-is
       return { text: entry };
     }
 
     const text = entry.substring(0, separatorIndex).trim();
-    const description = entry.substring(separatorIndex + 3).trim();
+    const description = entry.substring(separatorIndex + DESCRIPTION_SEPARATOR.length).trim();
 
-    return { text, description };
+    // Validate that the word text is not empty
+    if (!text) {
+      console.warn(`Invalid word entry with empty text: "${entry}"`);
+      return { text: entry }; // Return original entry as fallback
+    }
+
+    // Return undefined for description if it's empty after trimming
+    return { text, description: description || undefined };
   }
 
   /**

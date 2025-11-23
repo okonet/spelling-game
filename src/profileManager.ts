@@ -79,7 +79,8 @@ export class ProfileManager {
     nickname: string,
     avatar: string,
     initialDifficulty: Difficulty,
-    voiceSettings: VoiceSettings
+    voiceSettings: VoiceSettings,
+    gameSpeed: number = 1.0
   ): { success: boolean; error?: string; profile?: UserProfile } {
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -111,6 +112,7 @@ export class ProfileManager {
       preferences: {
         initialDifficulty,
         voice: voiceSettings,
+        gameSpeed,
       },
       createdAt: now,
       lastUsed: now,
@@ -130,7 +132,7 @@ export class ProfileManager {
     updates: {
       nickname?: string;
       avatar?: string;
-      preferences?: { voice?: VoiceSettings; initialDifficulty?: Difficulty };
+      preferences?: { voice?: VoiceSettings; initialDifficulty?: Difficulty; gameSpeed?: number };
     }
   ): { success: boolean; error?: string; profile?: UserProfile } {
     const normalizedEmail = email.toLowerCase().trim();
@@ -163,6 +165,9 @@ export class ProfileManager {
       }
       if (updates.preferences.initialDifficulty !== undefined) {
         profile.preferences.initialDifficulty = updates.preferences.initialDifficulty;
+      }
+      if (updates.preferences.gameSpeed !== undefined) {
+        profile.preferences.gameSpeed = updates.preferences.gameSpeed;
       }
     }
 
@@ -305,7 +310,8 @@ export class ProfileManager {
             playerName,
             '👤', // Default avatar
             'easy',
-            defaultVoiceSettings
+            defaultVoiceSettings,
+            1.0 // Default game speed
           );
 
           if (result.success) {

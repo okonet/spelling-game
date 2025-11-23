@@ -203,6 +203,13 @@ export class SpellingGame {
       }
     });
 
+    // Game speed slider - update label
+    const gameSpeedSlider = document.getElementById('profile-game-speed') as HTMLInputElement;
+    const gameSpeedValue = document.getElementById('game-speed-value');
+    gameSpeedSlider?.addEventListener('input', () => {
+      if (gameSpeedValue) gameSpeedValue.textContent = gameSpeedSlider.value;
+    });
+
     // Voice settings sliders - update labels
     const rateSlider = document.getElementById('profile-rate') as HTMLInputElement;
     const rateValue = document.getElementById('rate-value');
@@ -255,6 +262,13 @@ export class SpellingGame {
     const editDelayValue = document.getElementById('edit-delay-value');
     editDelaySlider?.addEventListener('input', () => {
       if (editDelayValue) editDelayValue.textContent = editDelaySlider.value;
+    });
+
+    // Edit game speed slider - update label
+    const editGameSpeedSlider = document.getElementById('edit-game-speed') as HTMLInputElement;
+    const editGameSpeedValue = document.getElementById('edit-game-speed-value');
+    editGameSpeedSlider?.addEventListener('input', () => {
+      if (editGameSpeedValue) editGameSpeedValue.textContent = editGameSpeedSlider.value;
     });
 
     // Edit voice preview button
@@ -378,6 +392,15 @@ export class SpellingGame {
       if (editDelayValue)
         editDelayValue.textContent = profile.preferences.voice.autoRepeatDelay.toString();
     }
+
+    // Populate game speed setting
+    const editGameSpeedInput = document.getElementById('edit-game-speed') as HTMLInputElement;
+    if (editGameSpeedInput) {
+      const gameSpeed = profile.preferences.gameSpeed ?? 1.0; // Default to 1.0 for old profiles
+      editGameSpeedInput.value = gameSpeed.toString();
+      const editGameSpeedValue = document.getElementById('edit-game-speed-value');
+      if (editGameSpeedValue) editGameSpeedValue.textContent = gameSpeed.toString();
+    }
   }
 
   private closeModal(modal: HTMLElement): void {
@@ -391,6 +414,9 @@ export class SpellingGame {
     const avatar = avatarBtn?.textContent || '👤';
     const difficulty = (document.getElementById('profile-difficulty') as HTMLSelectElement)
       .value as Difficulty;
+    const gameSpeed = parseFloat(
+      (document.getElementById('profile-game-speed') as HTMLInputElement).value
+    );
 
     const voiceURI = (document.getElementById('profile-voice') as HTMLSelectElement).value;
     const rate = parseFloat((document.getElementById('profile-rate') as HTMLInputElement).value);
@@ -413,7 +439,8 @@ export class SpellingGame {
       nickname,
       avatar,
       difficulty,
-      voiceSettings
+      voiceSettings,
+      gameSpeed
     );
 
     if (result.success) {
@@ -434,6 +461,9 @@ export class SpellingGame {
     const nickname = (document.getElementById('edit-nickname') as HTMLInputElement).value.trim();
     const avatarBtn = document.getElementById('edit-avatar-btn');
     const avatar = avatarBtn?.textContent || '👤';
+    const gameSpeed = parseFloat(
+      (document.getElementById('edit-game-speed') as HTMLInputElement).value
+    );
 
     // Get voice settings
     const voiceURI = (document.getElementById('edit-voice') as HTMLSelectElement).value;
@@ -457,6 +487,7 @@ export class SpellingGame {
       avatar,
       preferences: {
         voice: voiceSettings,
+        gameSpeed,
       },
     });
 
@@ -874,7 +905,8 @@ export class SpellingGame {
 
     const now = Date.now();
     const elapsed = now - this.currentWordStartTime;
-    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const wordLength = this.state.currentWord?.text.length;
+    const speed = this.getObstacleSpeedForLevel(this.state.level, wordLength);
     const speakingDuration = this.speakingEndTime - this.speakingStartTime;
     const obstacleReachTime = speed * 0.6;
     const elapsedSinceObstacle = now - this.obstacleStartTime;
@@ -974,12 +1006,26 @@ export class SpellingGame {
     return 'hard';
   }
 
-  private getObstacleSpeedForLevel(level: number): number {
+  private getObstacleSpeedForLevel(level: number, wordLength?: number): number {
     // Base speed: 8000ms (slower for beginners), decrease by 400ms per level, minimum 2500ms
     const baseSpeed = 8000;
     const speedDecrease = 400;
     const minSpeed = 2500;
-    return Math.max(minSpeed, baseSpeed - (level - 1) * speedDecrease);
+    let calculatedSpeed = Math.max(minSpeed, baseSpeed - (level - 1) * speedDecrease);
+
+    // Apply user's game speed preference (0.5 = slower, 1.5 = faster)
+    // Lower gameSpeed value = more time (divide), higher = less time (divide by larger number)
+    const userGameSpeed = this.state.currentProfile?.preferences.gameSpeed ?? 1.0;
+    calculatedSpeed = calculatedSpeed / userGameSpeed;
+
+    // Adjust for word length: longer words get more time
+    // Add 150ms per character beyond 4 letters (short words like "cat" get no bonus)
+    if (wordLength && wordLength > 4) {
+      const lengthBonus = (wordLength - 4) * 150;
+      calculatedSpeed = calculatedSpeed + lengthBonus;
+    }
+
+    return Math.round(calculatedSpeed);
   }
 
   private async nextRound(): Promise<void> {
@@ -1014,8 +1060,11 @@ export class SpellingGame {
     this.elements.obstacle.textContent = '🚧'; // Generic obstacle instead of showing the word
     this.elements.obstacle.classList.add('show');
 
-    // Update obstacle animation speed based on level
-    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    // Update obstacle animation speed based on level and word length
+    const speed = this.getObstacleSpeedForLevel(
+      this.state.level,
+      this.state.currentWord?.text.length
+    );
     this.elements.obstacle.style.animationDuration = `${speed}ms`;
 
     // Wait for input
@@ -1121,7 +1170,10 @@ export class SpellingGame {
     this.elements.speechBubble.classList.add('hidden');
 
     // Wait for obstacle to finish sliding off screen before reset
-    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const speed = this.getObstacleSpeedForLevel(
+      this.state.level,
+      this.state.currentWord?.text.length
+    );
     const elapsedTotal = Date.now() - this.obstacleStartTime;
     const remainingObstacleTime = Math.max(speed - elapsedTotal, 0);
     if (remainingObstacleTime > 0) {
@@ -1267,7 +1319,10 @@ export class SpellingGame {
     this.phase = 'jumping';
 
     // Calculate speed metrics
-    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const speed = this.getObstacleSpeedForLevel(
+      this.state.level,
+      this.state.currentWord?.text.length
+    );
     const obstacleReachTime = speed * 0.6; // Obstacle reaches character at 60% of animation
     const responseTime = this.answerSubmitTime - this.obstacleStartTime;
     const { multiplier: speedMultiplier, tier } = this.calculateSpeedMultiplier(
@@ -1364,7 +1419,10 @@ export class SpellingGame {
     this.state.comboCount = 0;
 
     // Calculate delay until obstacle reaches character
-    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const speed = this.getObstacleSpeedForLevel(
+      this.state.level,
+      this.state.currentWord?.text.length
+    );
     const obstacleReachTime = speed * 0.6; // Obstacle reaches character at 60% of animation
     const elapsedSinceObstacle = Date.now() - this.obstacleStartTime;
     const crashDelay = obstacleReachTime - elapsedSinceObstacle;
@@ -1426,7 +1484,10 @@ export class SpellingGame {
       this.elements.obstacle.textContent = '🚧';
       this.elements.obstacle.classList.add('show');
 
-      const speed = this.getObstacleSpeedForLevel(this.state.level);
+      const speed = this.getObstacleSpeedForLevel(
+        this.state.level,
+        this.state.currentWord?.text.length
+      );
       this.elements.obstacle.style.animationDuration = `${speed}ms`;
 
       // Set up timeout again
@@ -1449,7 +1510,10 @@ export class SpellingGame {
     if (!this.state.currentWord) return;
 
     // Calculate speed metrics
-    const speed = this.getObstacleSpeedForLevel(this.state.level);
+    const speed = this.getObstacleSpeedForLevel(
+      this.state.level,
+      this.state.currentWord?.text.length
+    );
     const obstacleReachTime = speed * 0.6;
     const responseTime =
       this.answerSubmitTime > 0

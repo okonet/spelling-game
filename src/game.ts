@@ -1015,19 +1015,21 @@ export class SpellingGame {
     const baseSpeed = 8000;
     const speedDecrease = 400;
     const minSpeed = 2500;
+    const wordLengthBonusPerChar = 150; // Additional time per character for longer words
+    const wordLengthBonusThreshold = 4; // Words longer than this get extra time
     let calculatedSpeed = Math.max(minSpeed, baseSpeed - (level - 1) * speedDecrease);
 
-    // Apply user's game speed preference (0.5 = slower, 1.5 = faster)
-    // Lower gameSpeed value = more time (divide), higher = less time (divide by larger number)
+    // Apply user's game speed preference (0.5 = slower/more time, 1.5 = faster/less time)
+    // Lower values divide by smaller number → more time; higher values divide by larger number → less time
     let userGameSpeed = this.state.currentProfile?.preferences.gameSpeed ?? 1.0;
     // Validate and clamp to safe range
     userGameSpeed = Math.max(0.5, Math.min(1.5, userGameSpeed));
     calculatedSpeed = calculatedSpeed / userGameSpeed;
 
-    // Adjust for word length: longer words get more time
-    // Add 150ms per character beyond 4 letters (short words like "cat" get no bonus)
-    if (wordLength && wordLength > 4) {
-      const lengthBonus = (wordLength - 4) * 150;
+    // Adjust for word length: longer words get proportionally more time
+    // Add wordLengthBonusPerChar per character beyond wordLengthBonusThreshold
+    if (wordLength && wordLength > wordLengthBonusThreshold) {
+      const lengthBonus = (wordLength - wordLengthBonusThreshold) * wordLengthBonusPerChar;
       calculatedSpeed = calculatedSpeed + lengthBonus;
     }
 

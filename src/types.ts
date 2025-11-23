@@ -3,6 +3,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface Word {
   text: string;
   difficulty: Difficulty;
+  description?: string; // Optional description to be read aloud instead of the word
 }
 
 export interface WordAttempt {

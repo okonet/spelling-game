@@ -79,6 +79,23 @@ export class WordManager {
   }
 
   /**
+   * Parse a word entry that may contain a description separated by ' - '
+   * Example: "cat - a small furry pet" returns { text: "cat", description: "a small furry pet" }
+   */
+  private parseWordEntry(entry: string): { text: string; description?: string } {
+    const separatorIndex = entry.indexOf(' - ');
+    if (separatorIndex === -1) {
+      // No description, return word as-is
+      return { text: entry };
+    }
+
+    const text = entry.substring(0, separatorIndex).trim();
+    const description = entry.substring(separatorIndex + 3).trim();
+
+    return { text, description };
+  }
+
+  /**
    * Get next word from the shuffled session list
    */
   getNextWord(difficulty: Difficulty): Word {
@@ -94,12 +111,14 @@ export class WordManager {
       index = 0;
     }
 
-    const word = wordList[index];
+    const wordEntry = wordList[index];
     this.sessionWordIndices.set(difficulty, index + 1);
 
+    const parsed = this.parseWordEntry(wordEntry);
     return {
-      text: word,
+      text: parsed.text,
       difficulty,
+      description: parsed.description,
     };
   }
 
@@ -141,11 +160,14 @@ export class WordManager {
   ): string[] {
     const wordList = [...this.words[difficulty]];
 
-    // Calculate priority score for each word
-    const wordScores = wordList.map(word => ({
-      word,
-      score: this.calculatePriorityScore(word, performanceMap),
-    }));
+    // Calculate priority score for each word (using just the word text for scoring)
+    const wordScores = wordList.map(wordEntry => {
+      const parsed = this.parseWordEntry(wordEntry);
+      return {
+        word: wordEntry, // Keep the full entry (with description)
+        score: this.calculatePriorityScore(parsed.text, performanceMap),
+      };
+    });
 
     // Sort by score (higher score = needs more practice = should appear earlier)
     wordScores.sort((a, b) => b.score - a.score);

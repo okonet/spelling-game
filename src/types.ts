@@ -104,6 +104,7 @@ export interface UserProfile {
   preferences: {
     initialDifficulty: Difficulty;
     voice: VoiceSettings;
+    gameSpeed: number; // 0.5 (slowest) to 1.5 (fastest), default 1.0
   };
   createdAt: number;
   lastUsed: number;

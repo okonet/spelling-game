@@ -1,4 +1,5 @@
 import type { UserProfile, Difficulty, VoiceSettings } from './types';
+import { validateGameSpeed, DEFAULT_GAME_SPEED } from './gameSpeedUtils';
 
 const PROFILES_STORAGE_KEY = 'spelling-game-profiles';
 const CURRENT_PROFILE_KEY = 'spelling-game-current-profile';
@@ -19,8 +20,15 @@ export class ProfileManager {
       const stored = localStorage.getItem(PROFILES_STORAGE_KEY);
       if (stored) {
         const profilesArray: UserProfile[] = JSON.parse(stored);
+        // Migrate legacy profiles that don't have gameSpeed
         this.profiles = new Map(
-          profilesArray.map(profile => [profile.email.toLowerCase(), profile])
+          profilesArray.map(profile => {
+            // Ensure gameSpeed exists (migration for old profiles)
+            if (profile.preferences.gameSpeed === undefined) {
+              profile.preferences.gameSpeed = DEFAULT_GAME_SPEED;
+            }
+            return [profile.email.toLowerCase(), profile];
+          })
         );
       }
 
@@ -79,7 +87,8 @@ export class ProfileManager {
     nickname: string,
     avatar: string,
     initialDifficulty: Difficulty,
-    voiceSettings: VoiceSettings
+    voiceSettings: VoiceSettings,
+    gameSpeed: number = 1.0
   ): { success: boolean; error?: string; profile?: UserProfile } {
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -111,6 +120,7 @@ export class ProfileManager {
       preferences: {
         initialDifficulty,
         voice: voiceSettings,
+        gameSpeed: validateGameSpeed(gameSpeed),
       },
       createdAt: now,
       lastUsed: now,
@@ -130,7 +140,7 @@ export class ProfileManager {
     updates: {
       nickname?: string;
       avatar?: string;
-      preferences?: { voice?: VoiceSettings; initialDifficulty?: Difficulty };
+      preferences?: { voice?: VoiceSettings; initialDifficulty?: Difficulty; gameSpeed?: number };
     }
   ): { success: boolean; error?: string; profile?: UserProfile } {
     const normalizedEmail = email.toLowerCase().trim();
@@ -163,6 +173,9 @@ export class ProfileManager {
       }
       if (updates.preferences.initialDifficulty !== undefined) {
         profile.preferences.initialDifficulty = updates.preferences.initialDifficulty;
+      }
+      if (updates.preferences.gameSpeed !== undefined) {
+        profile.preferences.gameSpeed = validateGameSpeed(updates.preferences.gameSpeed);
       }
     }
 
@@ -305,7 +318,8 @@ export class ProfileManager {
             playerName,
             '👤', // Default avatar
             'easy',
-            defaultVoiceSettings
+            defaultVoiceSettings,
+            1.0 // Default game speed
           );
 
           if (result.success) {

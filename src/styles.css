@@ -284,6 +284,30 @@ body {
   transition: all 0.3s ease;
 }
 
+.form-group input[type='range'] {
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: #ddd;
+  outline: none;
+  cursor: pointer;
+}
+
+.form-group input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-group input[type='range']::-webkit-slider-thumb:hover {
+  background: #764ba2;
+  transform: scale(1.2);
+}
+
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
@@ -471,6 +495,16 @@ body {
   width: 20px;
   height: 20px;
   cursor: pointer;
+}
+
+/* Speed hint styling */
+.speed-hint {
+  margin-top: 4px;
+}
+
+.speed-hint small {
+  color: #666;
+  font-style: italic;
 }
 
 /* Form Actions */

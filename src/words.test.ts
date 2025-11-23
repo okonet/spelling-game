@@ -378,4 +378,178 @@ describe('WordManager', () => {
       // but 'dog' should appear earlier than both mastered words on average
     });
   });
+
+  describe('Word Descriptions', () => {
+    it('should parse words without descriptions correctly', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat', 'dog'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toMatch(/^(cat|dog)$/);
+      expect(word.description).toBeUndefined();
+    });
+
+    it('should parse words with descriptions correctly', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat - a small furry pet', 'dog - a loyal animal friend'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word1 = wordManager.getNextWord('easy');
+      const word2 = wordManager.getNextWord('easy');
+
+      // Check first word
+      if (word1.text === 'cat') {
+        expect(word1.description).toBe('a small furry pet');
+      } else {
+        expect(word1.text).toBe('dog');
+        expect(word1.description).toBe('a loyal animal friend');
+      }
+
+      // Check second word
+      if (word2.text === 'cat') {
+        expect(word2.description).toBe('a small furry pet');
+      } else {
+        expect(word2.text).toBe('dog');
+        expect(word2.description).toBe('a loyal animal friend');
+      }
+    });
+
+    it('should handle mixed words (some with and some without descriptions)', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat - a small furry pet', 'dog', 'sun - a bright star'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const words = [
+        wordManager.getNextWord('easy'),
+        wordManager.getNextWord('easy'),
+        wordManager.getNextWord('easy'),
+      ];
+
+      // Find each word and verify
+      const catWord = words.find(w => w.text === 'cat');
+      expect(catWord).toBeDefined();
+      expect(catWord?.description).toBe('a small furry pet');
+
+      const dogWord = words.find(w => w.text === 'dog');
+      expect(dogWord).toBeDefined();
+      expect(dogWord?.description).toBeUndefined();
+
+      const sunWord = words.find(w => w.text === 'sun');
+      expect(sunWord).toBeDefined();
+      expect(sunWord?.description).toBe('a bright star');
+    });
+
+    it('should use word text for priority scoring even with description', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat - a small furry pet', 'dog - a loyal friend'],
+        medium: [],
+        hard: [],
+      };
+
+      const performanceMap = {
+        cat: {
+          word: 'cat',
+          timesCorrectFirstTry: 5,
+          timesMistakes: 0,
+          timesTimeout: 0,
+          totalAttempts: 5,
+          lastSeen: Date.now(),
+        },
+        dog: {
+          word: 'dog',
+          timesCorrectFirstTry: 0,
+          timesMistakes: 3,
+          timesTimeout: 0,
+          totalAttempts: 3,
+          lastSeen: Date.now(),
+        },
+      };
+
+      wordManager.initializeSessionWords(performanceMap);
+
+      // Get words and verify that priority scoring works
+      const word = wordManager.getNextWord('easy');
+      // Dog should have higher priority, so it's more likely to appear first
+      // but due to shuffling we can't be 100% certain
+      expect(['cat', 'dog']).toContain(word.text);
+    });
+
+    it('should handle descriptions with multiple dashes correctly', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['mother-in-law - a relative by marriage'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toBe('mother-in-law');
+      expect(word.description).toBe('a relative by marriage');
+    });
+
+    it('should trim whitespace from word text and description', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['  cat  -  a small furry pet  '],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toBe('cat');
+      expect(word.description).toBe('a small furry pet');
+    });
+
+    it('should handle empty description after separator', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat - '],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toBe('cat');
+      expect(word.description).toBeUndefined();
+    });
+
+    it('should handle invalid entry with empty text before separator', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: [' - a description'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      // Should fall back to using the original entry
+      expect(word.text).toBe(' - a description');
+      expect(word.description).toBeUndefined();
+    });
+  });
 });

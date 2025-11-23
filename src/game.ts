@@ -785,7 +785,8 @@ export class SpellingGame {
     // Speak again button
     this.elements.speakAgainButton.addEventListener('click', () => {
       if (this.state.currentWord) {
-        this.speakWord(this.state.currentWord.text);
+        const textToSpeak = this.state.currentWord.description || this.state.currentWord.text;
+        this.speakWord(textToSpeak);
       }
     });
 
@@ -1006,8 +1007,9 @@ export class SpellingGame {
     // Reset positions
     this.resetAnimations();
 
-    // Speak the word
-    await this.speakWord(this.state.currentWord.text);
+    // Speak the word (or its description if provided)
+    const textToSpeak = this.state.currentWord.description || this.state.currentWord.text;
+    await this.speakWord(textToSpeak);
 
     // Start obstacle moving and set timeout
     this.obstacleStartTime = Date.now(); // Track when obstacle starts moving

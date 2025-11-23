@@ -3,3 +3,4 @@ node_modules
 .idea
 .vite
 dist
+public/words-with-descriptions.json

@@ -3,6 +3,21 @@ import type { UserProfile, Difficulty, VoiceSettings } from './types';
 const PROFILES_STORAGE_KEY = 'spelling-game-profiles';
 const CURRENT_PROFILE_KEY = 'spelling-game-current-profile';
 
+// Game speed validation constants
+const DEFAULT_GAME_SPEED = 1.0;
+const MIN_GAME_SPEED = 0.5;
+const MAX_GAME_SPEED = 1.5;
+
+/**
+ * Validate and clamp game speed to safe range
+ */
+function validateGameSpeed(speed: number | undefined): number {
+  if (speed === undefined || isNaN(speed)) {
+    return DEFAULT_GAME_SPEED;
+  }
+  return Math.max(MIN_GAME_SPEED, Math.min(MAX_GAME_SPEED, speed));
+}
+
 export class ProfileManager {
   private profiles: Map<string, UserProfile> = new Map();
   private currentProfile: UserProfile | null = null;
@@ -112,7 +127,7 @@ export class ProfileManager {
       preferences: {
         initialDifficulty,
         voice: voiceSettings,
-        gameSpeed,
+        gameSpeed: validateGameSpeed(gameSpeed),
       },
       createdAt: now,
       lastUsed: now,
@@ -167,7 +182,7 @@ export class ProfileManager {
         profile.preferences.initialDifficulty = updates.preferences.initialDifficulty;
       }
       if (updates.preferences.gameSpeed !== undefined) {
-        profile.preferences.gameSpeed = updates.preferences.gameSpeed;
+        profile.preferences.gameSpeed = validateGameSpeed(updates.preferences.gameSpeed);
       }
     }
 

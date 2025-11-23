@@ -13,23 +13,11 @@ import { WordManager } from './words';
 import { AudioManager } from './audio';
 import { SessionManager } from './sessionManager';
 import { ProfileManager } from './profileManager';
+import { validateGameSpeed, DEFAULT_GAME_SPEED } from './gameSpeedUtils';
 
-// Game speed constants
-const DEFAULT_GAME_SPEED = 1.0;
-const MIN_GAME_SPEED = 0.5;
-const MAX_GAME_SPEED = 1.5;
+// Word length bonus constants
 const WORD_LENGTH_BONUS_PER_CHAR = 150; // Additional time (ms) per character for longer words
 const WORD_LENGTH_BONUS_THRESHOLD = 4; // Words longer than this get extra time
-
-/**
- * Validate and clamp game speed to safe range
- */
-function validateGameSpeed(speed: number | undefined): number {
-  if (speed === undefined || isNaN(speed)) {
-    return DEFAULT_GAME_SPEED;
-  }
-  return Math.max(MIN_GAME_SPEED, Math.min(MAX_GAME_SPEED, speed));
-}
 
 export class SpellingGame {
   private state: GameState;

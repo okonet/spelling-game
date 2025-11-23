@@ -1,22 +1,8 @@
 import type { UserProfile, Difficulty, VoiceSettings } from './types';
+import { validateGameSpeed, DEFAULT_GAME_SPEED } from './gameSpeedUtils';
 
 const PROFILES_STORAGE_KEY = 'spelling-game-profiles';
 const CURRENT_PROFILE_KEY = 'spelling-game-current-profile';
-
-// Game speed validation constants
-const DEFAULT_GAME_SPEED = 1.0;
-const MIN_GAME_SPEED = 0.5;
-const MAX_GAME_SPEED = 1.5;
-
-/**
- * Validate and clamp game speed to safe range
- */
-function validateGameSpeed(speed: number | undefined): number {
-  if (speed === undefined || isNaN(speed)) {
-    return DEFAULT_GAME_SPEED;
-  }
-  return Math.max(MIN_GAME_SPEED, Math.min(MAX_GAME_SPEED, speed));
-}
 
 export class ProfileManager {
   private profiles: Map<string, UserProfile> = new Map();
@@ -34,8 +20,15 @@ export class ProfileManager {
       const stored = localStorage.getItem(PROFILES_STORAGE_KEY);
       if (stored) {
         const profilesArray: UserProfile[] = JSON.parse(stored);
+        // Migrate legacy profiles that don't have gameSpeed
         this.profiles = new Map(
-          profilesArray.map(profile => [profile.email.toLowerCase(), profile])
+          profilesArray.map(profile => {
+            // Ensure gameSpeed exists (migration for old profiles)
+            if (profile.preferences.gameSpeed === undefined) {
+              profile.preferences.gameSpeed = DEFAULT_GAME_SPEED;
+            }
+            return [profile.email.toLowerCase(), profile];
+          })
         );
       }
 

@@ -14,6 +14,11 @@ import { AudioManager } from './audio';
 import { SessionManager } from './sessionManager';
 import { ProfileManager } from './profileManager';
 
+// Game speed constants
+const DEFAULT_GAME_SPEED = 1.0;
+const MIN_GAME_SPEED = 0.5;
+const MAX_GAME_SPEED = 1.5;
+
 export class SpellingGame {
   private state: GameState;
   private wordManager: WordManager;
@@ -396,7 +401,7 @@ export class SpellingGame {
     // Populate game speed setting
     const editGameSpeedInput = document.getElementById('edit-game-speed') as HTMLInputElement;
     if (editGameSpeedInput) {
-      const gameSpeed = profile.preferences.gameSpeed ?? 1.0; // Default to 1.0 for old profiles
+      const gameSpeed = profile.preferences.gameSpeed ?? DEFAULT_GAME_SPEED; // Default for old profiles
       editGameSpeedInput.value = gameSpeed.toString();
       const editGameSpeedValue = document.getElementById('edit-game-speed-value');
       if (editGameSpeedValue) editGameSpeedValue.textContent = gameSpeed.toString();
@@ -417,8 +422,11 @@ export class SpellingGame {
     let gameSpeed = parseFloat(
       (document.getElementById('profile-game-speed') as HTMLInputElement).value
     );
-    // Validate and clamp to safe range (0.5-1.5)
-    gameSpeed = Math.max(0.5, Math.min(1.5, isNaN(gameSpeed) ? 1.0 : gameSpeed));
+    // Validate and clamp to safe range
+    gameSpeed = Math.max(
+      MIN_GAME_SPEED,
+      Math.min(MAX_GAME_SPEED, isNaN(gameSpeed) ? DEFAULT_GAME_SPEED : gameSpeed)
+    );
 
     const voiceURI = (document.getElementById('profile-voice') as HTMLSelectElement).value;
     const rate = parseFloat((document.getElementById('profile-rate') as HTMLInputElement).value);
@@ -466,8 +474,11 @@ export class SpellingGame {
     let gameSpeed = parseFloat(
       (document.getElementById('edit-game-speed') as HTMLInputElement).value
     );
-    // Validate and clamp to safe range (0.5-1.5)
-    gameSpeed = Math.max(0.5, Math.min(1.5, isNaN(gameSpeed) ? 1.0 : gameSpeed));
+    // Validate and clamp to safe range
+    gameSpeed = Math.max(
+      MIN_GAME_SPEED,
+      Math.min(MAX_GAME_SPEED, isNaN(gameSpeed) ? DEFAULT_GAME_SPEED : gameSpeed)
+    );
 
     // Get voice settings
     const voiceURI = (document.getElementById('edit-voice') as HTMLSelectElement).value;
@@ -1021,9 +1032,9 @@ export class SpellingGame {
 
     // Apply user's game speed preference (0.5 = slower/more time, 1.5 = faster/less time)
     // Lower values divide by smaller number → more time; higher values divide by larger number → less time
-    let userGameSpeed = this.state.currentProfile?.preferences.gameSpeed ?? 1.0;
+    let userGameSpeed = this.state.currentProfile?.preferences.gameSpeed ?? DEFAULT_GAME_SPEED;
     // Validate and clamp to safe range
-    userGameSpeed = Math.max(0.5, Math.min(1.5, userGameSpeed));
+    userGameSpeed = Math.max(MIN_GAME_SPEED, Math.min(MAX_GAME_SPEED, userGameSpeed));
     calculatedSpeed = calculatedSpeed / userGameSpeed;
 
     // Adjust for word length: longer words get proportionally more time

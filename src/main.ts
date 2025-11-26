@@ -1,5 +1,9 @@
 import './styles.css';
 import { SpellingGame } from './game';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 // Initialize the game when the DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {

@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/okonet/spelling-game#readme",
   "dependencies": {
+    "@vercel/analytics": "^1.5.0",
     "canvas-confetti": "^1.9.4"
   },
   "devDependencies": {

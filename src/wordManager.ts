@@ -205,6 +205,13 @@ class WordManagerUI {
   }
 }
 
+// Stop any speech synthesis when navigating away from word manager
+window.addEventListener('beforeunload', () => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+});
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   const wordManager = new WordManagerUI();
@@ -220,13 +227,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusElement.classList.remove('hidden');
     }
   }
-
-  // Stop any speech synthesis when navigating away from word manager
-  window.addEventListener('beforeunload', () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-  });
 });
 
 export { WordManagerUI, CUSTOM_WORDS_KEY };

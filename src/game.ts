@@ -148,10 +148,31 @@ export class SpellingGame {
 
     this.initializeEventListeners();
     this.initializeProfileUI();
+    this.initializePageVisibilityHandler();
   }
 
   async initialize(): Promise<void> {
     await this.wordManager.loadWords();
+  }
+
+  private initializePageVisibilityHandler(): void {
+    // Reload words when page becomes visible (e.g., after returning from word manager)
+    document.addEventListener('visibilitychange', async () => {
+      if (!document.hidden && !this.state.isPlaying) {
+        // Only reload if we're not currently playing a game
+        try {
+          await this.wordManager.loadWords();
+          console.log('Reloaded words after page visibility change');
+        } catch (error) {
+          console.error('Failed to reload words:', error);
+        }
+      }
+    });
+
+    // Stop audio when navigating away from the page
+    window.addEventListener('beforeunload', () => {
+      this.audioManager.stop();
+    });
   }
 
   private initializeProfileUI(): void {

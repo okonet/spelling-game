@@ -162,7 +162,6 @@ export class SpellingGame {
         // Only reload if we're not currently playing a game
         try {
           await this.wordManager.loadWords();
-          console.log('Reloaded words after page visibility change');
         } catch (error) {
           console.error('Failed to reload words:', error);
         }

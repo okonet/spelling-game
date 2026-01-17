@@ -312,7 +312,6 @@ export class ProfileManager {
             email,
             playerName,
             '👤', // Default avatar
-            'easy',
             defaultVoiceSettings,
             1.0 // Default game speed
           );

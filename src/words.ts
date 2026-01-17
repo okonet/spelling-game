@@ -34,6 +34,10 @@ export class WordManager {
           }
 
           // Validate that all elements are strings
+          if (!Array.isArray(customWords)) {
+            throw new Error('Custom words must be an array');
+          }
+
           const isValidArray = (arr: unknown[]): arr is string[] =>
             arr.every(item => typeof item === 'string');
 

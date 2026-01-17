@@ -14,7 +14,17 @@ export class WordManager {
       const customWordsJson = localStorage.getItem(CUSTOM_WORDS_KEY);
       if (customWordsJson) {
         try {
-          const customWords = JSON.parse(customWordsJson);
+          const parsed = JSON.parse(customWordsJson);
+
+          // Handle both formats: array or object with words property
+          let customWords: unknown;
+          if (Array.isArray(parsed)) {
+            customWords = parsed;
+          } else if (parsed && typeof parsed === 'object' && 'words' in parsed) {
+            customWords = parsed.words;
+          } else {
+            throw new Error('Invalid custom words structure');
+          }
 
           // Validate the structure and data types
           if (!Array.isArray(customWords)) {

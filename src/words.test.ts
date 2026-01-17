@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WordManager } from './words';
 import type { WordPerformanceMap } from './types';
 
@@ -614,6 +614,82 @@ describe('WordManager', () => {
       const word = wordManager.getNextWord('easy');
       expect(word.text).toBe('test');
       expect(word.description).toBe('first — second - third');
+    });
+  });
+
+  describe('Loading Words', () => {
+    beforeEach(() => {
+      // Clear localStorage before each test
+      localStorage.clear();
+      // Mock fetch to return default words
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(['default1', 'default2', 'default3']),
+        } as Response)
+      );
+    });
+
+    it('should load custom words from localStorage in object format', async () => {
+      const customWordsData = {
+        words: ['custom1', 'custom2', 'custom3'],
+        lastModified: Date.now(),
+      };
+      localStorage.setItem('spellingGame_customWords', JSON.stringify(customWordsData));
+
+      await wordManager.loadWords();
+
+      expect(wordManager.getWordCount()).toBe(3);
+      wordManager.initializeSessionWords({});
+      const word = wordManager.getNextWord();
+      expect(['custom1', 'custom2', 'custom3']).toContain(word.text);
+    });
+
+    it('should load custom words from localStorage in array format (legacy)', async () => {
+      const customWordsArray = ['legacy1', 'legacy2', 'legacy3'];
+      localStorage.setItem('spellingGame_customWords', JSON.stringify(customWordsArray));
+
+      await wordManager.loadWords();
+
+      expect(wordManager.getWordCount()).toBe(3);
+      wordManager.initializeSessionWords({});
+      const word = wordManager.getNextWord();
+      expect(['legacy1', 'legacy2', 'legacy3']).toContain(word.text);
+    });
+
+    it('should fall back to default words when localStorage has invalid format', async () => {
+      localStorage.setItem('spellingGame_customWords', JSON.stringify({ invalid: 'format' }));
+
+      await wordManager.loadWords();
+
+      expect(wordManager.getWordCount()).toBe(3);
+      wordManager.initializeSessionWords({});
+      const word = wordManager.getNextWord();
+      expect(['default1', 'default2', 'default3']).toContain(word.text);
+    });
+
+    it('should fall back to default words when localStorage is empty', async () => {
+      await wordManager.loadWords();
+
+      expect(wordManager.getWordCount()).toBe(3);
+      wordManager.initializeSessionWords({});
+      const word = wordManager.getNextWord();
+      expect(['default1', 'default2', 'default3']).toContain(word.text);
+    });
+
+    it('should fall back to default words when localStorage contains non-string values', async () => {
+      const invalidData = {
+        words: ['valid', 123, 'another'],
+        lastModified: Date.now(),
+      };
+      localStorage.setItem('spellingGame_customWords', JSON.stringify(invalidData));
+
+      await wordManager.loadWords();
+
+      expect(wordManager.getWordCount()).toBe(3);
+      wordManager.initializeSessionWords({});
+      const word = wordManager.getNextWord();
+      expect(['default1', 'default2', 'default3']).toContain(word.text);
     });
   });
 });

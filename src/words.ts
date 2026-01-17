@@ -3,6 +3,12 @@ import type { WordConfig, Word, WordPerformanceMap } from './types';
 const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
 const DESCRIPTION_SEPARATORS = [' - ', ' – ', ' — ']; // Support hyphen-minus, en dash, em dash
 
+// Interface for custom words stored in localStorage
+interface StoredCustomWords {
+  words: unknown[];
+  lastModified?: number;
+}
+
 export class WordManager {
   private words: WordConfig = [];
   private sessionWordList: string[] = [];
@@ -14,10 +20,22 @@ export class WordManager {
       const customWordsJson = localStorage.getItem(CUSTOM_WORDS_KEY);
       if (customWordsJson) {
         try {
-          const customWords = JSON.parse(customWordsJson);
+          const parsed = JSON.parse(customWordsJson);
 
-          // Validate the structure and data types
-          if (!Array.isArray(customWords)) {
+          // Handle both formats: array or object with words property
+          let customWords: unknown[];
+          if (Array.isArray(parsed)) {
+            // Legacy format: direct array
+            customWords = parsed;
+          } else if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'words' in parsed &&
+            Array.isArray((parsed as StoredCustomWords).words)
+          ) {
+            // Current format: object with words property
+            customWords = (parsed as StoredCustomWords).words;
+          } else {
             throw new Error('Invalid custom words structure');
           }
 

@@ -2,7 +2,6 @@ import confetti from 'canvas-confetti';
 import type {
   GameState,
   GamePhase,
-  Difficulty,
   WordAttempt,
   WordResult,
   SpeedTier,
@@ -89,7 +88,6 @@ export class SpellingGame {
       currentWordAttempts: [],
       score: 0,
       lives: 3,
-      difficulty: 'easy',
       isPlaying: false,
       isGameOver: false,
       userInput: '',
@@ -417,8 +415,6 @@ export class SpellingGame {
     const nickname = (document.getElementById('profile-nickname') as HTMLInputElement).value.trim();
     const avatarBtn = document.getElementById('select-avatar-btn');
     const avatar = avatarBtn?.textContent || '👤';
-    const difficulty = (document.getElementById('profile-difficulty') as HTMLSelectElement)
-      .value as Difficulty;
     const gameSpeed = validateGameSpeed(
       parseFloat((document.getElementById('profile-game-speed') as HTMLInputElement).value)
     );
@@ -443,7 +439,6 @@ export class SpellingGame {
       email,
       nickname,
       avatar,
-      difficulty,
       voiceSettings,
       gameSpeed
     );
@@ -946,7 +941,6 @@ export class SpellingGame {
   private startGame(profile: UserProfile): void {
     this.state.currentProfile = profile;
     this.state.playerName = profile.nickname; // For backwards compatibility
-    this.state.difficulty = profile.preferences.initialDifficulty;
     this.state.isPlaying = true;
     this.state.score = 0;
     this.state.lives = 3;
@@ -958,11 +952,7 @@ export class SpellingGame {
     this.audioManager.updateVoiceSettings(profile.preferences.voice);
 
     // Create new session with email
-    this.sessionManager.createSession(
-      profile.email,
-      profile.preferences.initialDifficulty,
-      profile.nickname
-    );
+    this.sessionManager.createSession(profile.email, profile.nickname);
 
     // Initialize weighted word lists based on this player's performance history
     const performanceMap = this.sessionManager.getWordPerformanceByEmail(profile.email);
@@ -975,41 +965,6 @@ export class SpellingGame {
 
     this.updateDisplay();
     this.nextRound();
-  }
-
-  private getDifficultyWeightsForLevel(level: number): {
-    easy: number;
-    medium: number;
-    hard: number;
-  } {
-    // Gradual difficulty progression - each level introduces more of the next tier
-    switch (level) {
-      case 1:
-        return { easy: 1.0, medium: 0, hard: 0 }; // 100% easy
-      case 2:
-        return { easy: 0.7, medium: 0.3, hard: 0 }; // Introduce medium
-      case 3:
-        return { easy: 0.5, medium: 0.5, hard: 0 }; // 50/50 easy/medium
-      case 4:
-        return { easy: 0.3, medium: 0.7, hard: 0 }; // Mostly medium
-      case 5:
-        return { easy: 0, medium: 0.8, hard: 0.2 }; // Introduce hard
-      case 6:
-        return { easy: 0, medium: 0.6, hard: 0.4 }; // More hard words
-      case 7:
-        return { easy: 0, medium: 0.4, hard: 0.6 }; // Mostly hard
-      case 8:
-        return { easy: 0, medium: 0.2, hard: 0.8 }; // Very hard
-      default:
-        return { easy: 0, medium: 0.1, hard: 0.9 }; // Level 9+: almost all hard
-    }
-  }
-
-  private getDifficultyForLevel(level: number): Difficulty {
-    // Legacy method for display purposes - returns the primary difficulty tier
-    if (level <= 2) return 'easy';
-    if (level <= 5) return 'medium';
-    return 'hard';
   }
 
   private getObstacleSpeedForLevel(level: number, wordLength?: number): number {
@@ -1042,13 +997,9 @@ export class SpellingGame {
       this.saveWordResult(false);
     }
 
-    // Update difficulty based on current level (for display)
-    this.state.difficulty = this.getDifficultyForLevel(this.state.level);
-
     this.phase = 'speaking';
-    // Get word with weighted difficulty distribution for gradual progression
-    const weights = this.getDifficultyWeightsForLevel(this.state.level);
-    this.state.currentWord = this.wordManager.getNextWordMixed(weights);
+    // Get next word from the list
+    this.state.currentWord = this.wordManager.getNextWord();
     this.state.currentWordAttempts = [];
     this.currentWordStartTime = Date.now();
     this.state.showCorrectSpelling = false;
@@ -1568,7 +1519,6 @@ export class SpellingGame {
 
     const wordResult: WordResult = {
       word: this.state.currentWord.text,
-      difficulty: this.state.currentWord.difficulty,
       attempts: [...this.state.currentWordAttempts],
       scoreEarned,
       speedMultiplier,

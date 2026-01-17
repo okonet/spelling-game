@@ -37,10 +37,9 @@ describe('SessionManager', () => {
 
   describe('Session Management', () => {
     it('should create a new session for a player', () => {
-      const session = sessionManager.createSession('Alice', 'easy');
+      const session = sessionManager.createSession('alice@email.com', 'Alice');
 
       expect(session.playerName).toBe('Alice');
-      expect(session.difficulty).toBe('easy');
       expect(session.totalScore).toBe(0);
       expect(session.wordsPlayed).toEqual([]);
       expect(session.livesRemaining).toBe(3);
@@ -49,14 +48,14 @@ describe('SessionManager', () => {
     });
 
     it('should track current session', () => {
-      const session = sessionManager.createSession('Bob', 'medium');
+      const session = sessionManager.createSession('bob@email.com', 'Bob');
       const currentSession = sessionManager.getCurrentSession();
 
       expect(currentSession).toEqual(session);
     });
 
     it('should update session score', () => {
-      sessionManager.createSession('Charlie', 'easy');
+      sessionManager.createSession('charlie@email.com', 'Charlie');
       sessionManager.updateSessionScore(50);
 
       const session = sessionManager.getCurrentSession();
@@ -64,7 +63,7 @@ describe('SessionManager', () => {
     });
 
     it('should update session lives', () => {
-      sessionManager.createSession('Diana', 'easy');
+      sessionManager.createSession('diana@email.com', 'Diana');
       sessionManager.updateSessionLives(2);
 
       const session = sessionManager.getCurrentSession();
@@ -72,10 +71,10 @@ describe('SessionManager', () => {
     });
 
     it('should save and retrieve all sessions', () => {
-      const session1 = sessionManager.createSession('Eve', 'easy');
+      const session1 = sessionManager.createSession('eve@email.com', 'Eve');
       sessionManager.endSession();
 
-      const session2 = sessionManager.createSession('Frank', 'hard');
+      const session2 = sessionManager.createSession('frank@email.com', 'Frank');
       sessionManager.endSession();
 
       const allSessions = sessionManager.getAllSessions();
@@ -85,13 +84,13 @@ describe('SessionManager', () => {
     });
 
     it('should filter sessions by player name', () => {
-      sessionManager.createSession('Grace', 'easy');
+      sessionManager.createSession('grace@email.com', 'Grace');
       sessionManager.endSession();
 
-      sessionManager.createSession('Henry', 'medium');
+      sessionManager.createSession('henry@email.com', 'Henry');
       sessionManager.endSession();
 
-      sessionManager.createSession('Grace', 'hard');
+      sessionManager.createSession('grace@email.com', 'Grace');
       sessionManager.endSession();
 
       const graceSessions = sessionManager.getSessionsByPlayer('Grace');
@@ -101,10 +100,10 @@ describe('SessionManager', () => {
     });
 
     it('should delete specific session', () => {
-      const session1 = sessionManager.createSession('Ivan', 'easy');
+      const session1 = sessionManager.createSession('ivan@email.com', 'Ivan');
       sessionManager.endSession();
 
-      const session2 = sessionManager.createSession('Ivan', 'medium');
+      const session2 = sessionManager.createSession('ivan@email.com', 'Ivan');
       sessionManager.endSession();
 
       sessionManager.deleteSession(session1.sessionId);

@@ -1,4 +1,4 @@
-import type { UserProfile, Difficulty, VoiceSettings } from './types';
+import type { UserProfile, VoiceSettings } from './types';
 import { validateGameSpeed, DEFAULT_GAME_SPEED } from './gameSpeedUtils';
 
 const PROFILES_STORAGE_KEY = 'spelling-game-profiles';
@@ -86,7 +86,6 @@ export class ProfileManager {
     email: string,
     nickname: string,
     avatar: string,
-    initialDifficulty: Difficulty,
     voiceSettings: VoiceSettings,
     gameSpeed: number = 1.0
   ): { success: boolean; error?: string; profile?: UserProfile } {
@@ -118,7 +117,6 @@ export class ProfileManager {
       nickname: nickname.trim(),
       avatar: avatar.trim(),
       preferences: {
-        initialDifficulty,
         voice: voiceSettings,
         gameSpeed: validateGameSpeed(gameSpeed),
       },
@@ -140,7 +138,7 @@ export class ProfileManager {
     updates: {
       nickname?: string;
       avatar?: string;
-      preferences?: { voice?: VoiceSettings; initialDifficulty?: Difficulty; gameSpeed?: number };
+      preferences?: { voice?: VoiceSettings; gameSpeed?: number };
     }
   ): { success: boolean; error?: string; profile?: UserProfile } {
     const normalizedEmail = email.toLowerCase().trim();
@@ -170,9 +168,6 @@ export class ProfileManager {
     if (updates.preferences !== undefined) {
       if (updates.preferences.voice !== undefined) {
         profile.preferences.voice = updates.preferences.voice;
-      }
-      if (updates.preferences.initialDifficulty !== undefined) {
-        profile.preferences.initialDifficulty = updates.preferences.initialDifficulty;
       }
       if (updates.preferences.gameSpeed !== undefined) {
         profile.preferences.gameSpeed = validateGameSpeed(updates.preferences.gameSpeed);
@@ -317,7 +312,6 @@ export class ProfileManager {
             email,
             playerName,
             '👤', // Default avatar
-            'easy',
             defaultVoiceSettings,
             1.0 // Default game speed
           );

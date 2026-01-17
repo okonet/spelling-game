@@ -6,13 +6,12 @@ const PERFORMANCE_KEY = 'spelling-game-word-performance';
 export class SessionManager {
   private currentSession: PlayerSession | null = null;
 
-  createSession(email: string, difficulty: string, playerName?: string): PlayerSession {
+  createSession(email: string, playerName?: string): PlayerSession {
     const session: PlayerSession = {
       email: email.toLowerCase().trim(),
       playerName, // Optional: for backwards compatibility
       sessionId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       startTime: Date.now(),
-      difficulty: difficulty as PlayerSession['difficulty'],
       totalScore: 0,
       wordsPlayed: [],
       livesRemaining: 3,

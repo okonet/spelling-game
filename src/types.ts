@@ -1,8 +1,5 @@
-export type Difficulty = 'easy' | 'medium' | 'hard';
-
 export interface Word {
   text: string;
-  difficulty: Difficulty;
   description?: string; // Optional description to be read aloud instead of the word
 }
 
@@ -16,7 +13,6 @@ export type SpeedTier = 'lightning' | 'fast' | 'good' | 'normal';
 
 export interface WordResult {
   word: string;
-  difficulty: Difficulty;
   attempts: WordAttempt[];
   scoreEarned: number;
   speedMultiplier: number;
@@ -36,7 +32,6 @@ export interface PlayerSession {
   sessionId: string;
   startTime: number;
   endTime?: number;
-  difficulty: Difficulty;
   totalScore: number;
   wordsPlayed: WordResult[];
   livesRemaining: number;
@@ -47,7 +42,6 @@ export interface GameState {
   currentWordAttempts: WordAttempt[];
   score: number;
   lives: number;
-  difficulty: Difficulty;
   isPlaying: boolean;
   isGameOver: boolean;
   userInput: string;
@@ -60,11 +54,7 @@ export interface GameState {
   comboCount: number; // Consecutive correct answers (first try only)
 }
 
-export interface WordConfig {
-  easy: string[];
-  medium: string[];
-  hard: string[];
-}
+export type WordConfig = string[];
 
 export type GamePhase =
   | 'idle'
@@ -102,7 +92,6 @@ export interface UserProfile {
   nickname: string;
   avatar: string; // Emoji
   preferences: {
-    initialDifficulty: Difficulty;
     voice: VoiceSettings;
     gameSpeed: number; // 0.5 (slowest) to 1.5 (fastest), default 1.0
   };

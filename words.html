@@ -15,8 +15,9 @@
 
       <div class="word-manager-info">
         <p>
-          Manage your custom word lists for each difficulty level. Enter one word per line. Changes
-          are saved to your browser's local storage.
+          Manage your custom word list. Enter one word per line. You can optionally add a
+          description after a dash (e.g., "cat - a small furry pet"). Changes are saved to your
+          browser's local storage.
         </p>
       </div>
 
@@ -26,51 +27,19 @@
       </div>
 
       <div id="word-lists" class="word-lists">
-        <!-- Easy Words -->
+        <!-- All Words -->
         <div class="word-list-section">
           <div class="word-list-header">
             <h2 class="word-list-title">
-              🟢 Easy Words
-              <span id="easy-count" class="word-count">(0)</span>
+              📚 All Words
+              <span id="word-count" class="word-count">(0)</span>
             </h2>
           </div>
           <textarea
-            id="easy-words"
+            id="words"
             class="word-textarea"
-            placeholder="Enter easy words, one per line..."
-            rows="10"
-          ></textarea>
-        </div>
-
-        <!-- Medium Words -->
-        <div class="word-list-section">
-          <div class="word-list-header">
-            <h2 class="word-list-title">
-              🟡 Medium Words
-              <span id="medium-count" class="word-count">(0)</span>
-            </h2>
-          </div>
-          <textarea
-            id="medium-words"
-            class="word-textarea"
-            placeholder="Enter medium words, one per line..."
-            rows="10"
-          ></textarea>
-        </div>
-
-        <!-- Hard Words -->
-        <div class="word-list-section">
-          <div class="word-list-header">
-            <h2 class="word-list-title">
-              🔴 Hard Words
-              <span id="hard-count" class="word-count">(0)</span>
-            </h2>
-          </div>
-          <textarea
-            id="hard-words"
-            class="word-textarea"
-            placeholder="Enter hard words, one per line..."
-            rows="10"
+            placeholder="Enter words, one per line..."
+            rows="30"
           ></textarea>
         </div>
       </div>

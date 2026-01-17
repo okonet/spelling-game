@@ -1,12 +1,12 @@
-import type { WordConfig, Word, Difficulty, WordPerformanceMap } from './types';
+import type { WordConfig, Word, WordPerformanceMap } from './types';
 
 const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
 const DESCRIPTION_SEPARATORS = [' - ', ' – ', ' — ']; // Support hyphen-minus, en dash, em dash
 
 export class WordManager {
-  private words: WordConfig = { easy: [], medium: [], hard: [] };
-  private sessionWordLists: Map<Difficulty, string[]> = new Map();
-  private sessionWordIndices: Map<Difficulty, number> = new Map();
+  private words: WordConfig = [];
+  private sessionWordList: string[] = [];
+  private sessionWordIndex: number = 0;
 
   async loadWords(url: string = '/words.json'): Promise<void> {
     try {
@@ -17,13 +17,7 @@ export class WordManager {
           const customWords = JSON.parse(customWordsJson);
 
           // Validate the structure and data types
-          if (
-            !customWords ||
-            typeof customWords !== 'object' ||
-            !Array.isArray(customWords.easy) ||
-            !Array.isArray(customWords.medium) ||
-            !Array.isArray(customWords.hard)
-          ) {
+          if (!Array.isArray(customWords)) {
             throw new Error('Invalid custom words structure');
           }
 
@@ -31,19 +25,11 @@ export class WordManager {
           const isValidArray = (arr: unknown[]): arr is string[] =>
             arr.every(item => typeof item === 'string');
 
-          if (
-            !isValidArray(customWords.easy) ||
-            !isValidArray(customWords.medium) ||
-            !isValidArray(customWords.hard)
-          ) {
-            throw new Error('Custom words must be arrays of strings');
+          if (!isValidArray(customWords)) {
+            throw new Error('Custom words must be an array of strings');
           }
 
-          this.words = {
-            easy: customWords.easy,
-            medium: customWords.medium,
-            hard: customWords.hard,
-          };
+          this.words = customWords;
           console.log('Loaded custom words from localStorage');
           return;
         } catch (error) {
@@ -66,17 +52,11 @@ export class WordManager {
   }
 
   /**
-   * Initialize shuffled word lists for a new session based on performance history
+   * Initialize shuffled word list for a new session based on performance history
    */
   initializeSessionWords(performanceMap: WordPerformanceMap): void {
-    this.sessionWordLists.clear();
-    this.sessionWordIndices.clear();
-
-    (['easy', 'medium', 'hard'] as Difficulty[]).forEach(difficulty => {
-      const shuffled = this.createWeightedShuffledList(difficulty, performanceMap);
-      this.sessionWordLists.set(difficulty, shuffled);
-      this.sessionWordIndices.set(difficulty, 0);
-    });
+    this.sessionWordList = this.createWeightedShuffledList(performanceMap);
+    this.sessionWordIndex = 0;
   }
 
   /**
@@ -117,67 +97,31 @@ export class WordManager {
   /**
    * Get next word from the shuffled session list
    */
-  getNextWord(difficulty: Difficulty): Word {
-    const wordList = this.sessionWordLists.get(difficulty);
-    let index = this.sessionWordIndices.get(difficulty) || 0;
-
-    if (!wordList || wordList.length === 0) {
-      throw new Error(`No words available for difficulty: ${difficulty}`);
+  getNextWord(): Word {
+    if (!this.sessionWordList || this.sessionWordList.length === 0) {
+      throw new Error('No words available');
     }
 
     // Loop back to start if we've gone through all words
-    if (index >= wordList.length) {
-      index = 0;
+    if (this.sessionWordIndex >= this.sessionWordList.length) {
+      this.sessionWordIndex = 0;
     }
 
-    const wordEntry = wordList[index];
-    this.sessionWordIndices.set(difficulty, index + 1);
+    const wordEntry = this.sessionWordList[this.sessionWordIndex];
+    this.sessionWordIndex++;
 
     const parsed = this.parseWordEntry(wordEntry);
     return {
       text: parsed.text,
-      difficulty,
       description: parsed.description,
     };
   }
 
   /**
-   * Get next word with weighted difficulty distribution
-   * @param weights - Object with difficulty weights (e.g., { easy: 0.7, medium: 0.3, hard: 0 })
-   */
-  getNextWordMixed(weights: { easy: number; medium: number; hard: number }): Word {
-    // Normalize weights to ensure they sum to 1
-    const total = weights.easy + weights.medium + weights.hard;
-    const normalized = {
-      easy: weights.easy / total,
-      medium: weights.medium / total,
-      hard: weights.hard / total,
-    };
-
-    // Random selection based on weights
-    const rand = Math.random();
-    let cumulative = 0;
-    let selectedDifficulty: Difficulty = 'easy';
-
-    for (const [difficulty, weight] of Object.entries(normalized)) {
-      cumulative += weight;
-      if (rand <= cumulative) {
-        selectedDifficulty = difficulty as Difficulty;
-        break;
-      }
-    }
-
-    return this.getNextWord(selectedDifficulty);
-  }
-
-  /**
    * Create a weighted shuffled list prioritizing words that need practice
    */
-  private createWeightedShuffledList(
-    difficulty: Difficulty,
-    performanceMap: WordPerformanceMap
-  ): string[] {
-    const wordList = [...this.words[difficulty]];
+  private createWeightedShuffledList(performanceMap: WordPerformanceMap): string[] {
+    const wordList = [...this.words];
 
     // Calculate priority score for each word (using just the word text for scoring)
     const wordScores = wordList.map(wordEntry => {
@@ -254,11 +198,11 @@ export class WordManager {
   }
 
   resetSession(): void {
-    this.sessionWordLists.clear();
-    this.sessionWordIndices.clear();
+    this.sessionWordList = [];
+    this.sessionWordIndex = 0;
   }
 
-  getWordCount(difficulty: Difficulty): number {
-    return this.words[difficulty].length;
+  getWordCount(): number {
+    return this.words.length;
   }
 }

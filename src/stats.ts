@@ -357,10 +357,6 @@ class StatsPage {
             <span class="detail-label">Words Played:</span>
             <span class="detail-value">${session.wordsPlayed.length}</span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Difficulty:</span>
-            <span class="detail-value difficulty-${session.difficulty}">${session.difficulty}</span>
-          </div>
         </div>
         <div class="words-section">
           <h4 class="words-title">Words Attempted:</h4>

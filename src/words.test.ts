@@ -167,11 +167,7 @@ describe('WordManager', () => {
     it('should create shuffled word lists prioritizing struggling words', () => {
       // Mock word data
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat', 'dog', 'sun', 'bed', 'car'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat', 'dog', 'sun', 'bed', 'car'];
 
       const performanceMap: WordPerformanceMap = {
         cat: {
@@ -206,7 +202,7 @@ describe('WordManager', () => {
       // Get words in order
       const words = [];
       for (let i = 0; i < 5; i++) {
-        words.push(wordManager.getNextWord('easy').text);
+        words.push(wordManager.getNextWord().text);
       }
 
       // Calculate priority scores to determine expected order
@@ -241,17 +237,13 @@ describe('WordManager', () => {
 
     it('should loop back to start when all words are used', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat', 'dog'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat', 'dog'];
 
       wordManager.initializeSessionWords({});
 
-      const firstWord = wordManager.getNextWord('easy').text;
-      wordManager.getNextWord('easy'); // Get second word
-      const thirdWord = wordManager.getNextWord('easy').text;
+      const firstWord = wordManager.getNextWord().text;
+      wordManager.getNextWord(); // Get second word
+      const thirdWord = wordManager.getNextWord().text;
 
       // Third word should be same as first (looped back)
       expect(thirdWord).toBe(firstWord);
@@ -259,60 +251,44 @@ describe('WordManager', () => {
   });
 
   describe('Session Management', () => {
-    it('should initialize separate word lists for each difficulty', () => {
+    it('should initialize word list', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat', 'dog'],
-        medium: ['house', 'table'],
-        hard: ['beautiful', 'elephant'],
-      };
+      wordManager['words'] = ['cat', 'dog', 'house'];
 
       wordManager.initializeSessionWords({});
 
-      const easyWord = wordManager.getNextWord('easy');
-      const mediumWord = wordManager.getNextWord('medium');
-      const hardWord = wordManager.getNextWord('hard');
+      const word = wordManager.getNextWord();
 
-      expect(['cat', 'dog']).toContain(easyWord.text);
-      expect(['house', 'table']).toContain(mediumWord.text);
-      expect(['beautiful', 'elephant']).toContain(hardWord.text);
+      expect(['cat', 'dog', 'house']).toContain(word.text);
     });
 
-    it('should reset session and clear word lists', () => {
+    it('should reset session and clear word list', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat', 'dog'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat', 'dog'];
 
       wordManager.initializeSessionWords({});
-      wordManager.getNextWord('easy');
+      wordManager.getNextWord();
 
       wordManager.resetSession();
 
-      // After reset, session lists should be cleared
-      expect(() => wordManager.getNextWord('easy')).toThrow();
+      // After reset, session list should be cleared
+      expect(() => wordManager.getNextWord()).toThrow();
     });
   });
 
   describe('Real-world Scenario: Learning Journey', () => {
     it('should demonstrate adaptive learning over multiple sessions', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat', 'dog', 'sun'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat', 'dog', 'sun'];
 
       // Session 1: First time playing
       const session1Performance: WordPerformanceMap = {};
       wordManager.initializeSessionWords(session1Performance);
 
       const session1Words = [
-        wordManager.getNextWord('easy').text,
-        wordManager.getNextWord('easy').text,
-        wordManager.getNextWord('easy').text,
+        wordManager.getNextWord().text,
+        wordManager.getNextWord().text,
+        wordManager.getNextWord().text,
       ];
 
       // All words should appear (all have priority 1000)
@@ -352,9 +328,9 @@ describe('WordManager', () => {
       wordManager.initializeSessionWords(session2Performance);
 
       const session2Words = [
-        wordManager.getNextWord('easy').text,
-        wordManager.getNextWord('easy').text,
-        wordManager.getNextWord('easy').text,
+        wordManager.getNextWord().text,
+        wordManager.getNextWord().text,
+        wordManager.getNextWord().text,
       ];
 
       // Calculate priority scores to verify 'dog' has highest priority
@@ -382,31 +358,23 @@ describe('WordManager', () => {
   describe('Word Descriptions', () => {
     it('should parse words without descriptions correctly', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat', 'dog'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat', 'dog'];
 
       wordManager.initializeSessionWords({});
 
-      const word = wordManager.getNextWord('easy');
+      const word = wordManager.getNextWord();
       expect(word.text).toMatch(/^(cat|dog)$/);
       expect(word.description).toBeUndefined();
     });
 
     it('should parse words with descriptions correctly', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat - a small furry pet', 'dog - a loyal animal friend'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat - a small furry pet', 'dog - a loyal animal friend'];
 
       wordManager.initializeSessionWords({});
 
-      const word1 = wordManager.getNextWord('easy');
-      const word2 = wordManager.getNextWord('easy');
+      const word1 = wordManager.getNextWord();
+      const word2 = wordManager.getNextWord();
 
       // Check first word
       if (word1.text === 'cat') {
@@ -427,18 +395,14 @@ describe('WordManager', () => {
 
     it('should handle mixed words (some with and some without descriptions)', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat - a small furry pet', 'dog', 'sun - a bright star'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat - a small furry pet', 'dog', 'sun - a bright star'];
 
       wordManager.initializeSessionWords({});
 
       const words = [
-        wordManager.getNextWord('easy'),
-        wordManager.getNextWord('easy'),
-        wordManager.getNextWord('easy'),
+        wordManager.getNextWord(),
+        wordManager.getNextWord(),
+        wordManager.getNextWord(),
       ];
 
       // Find each word and verify
@@ -457,11 +421,7 @@ describe('WordManager', () => {
 
     it('should use word text for priority scoring even with description', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat - a small furry pet', 'dog - a loyal friend'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat - a small furry pet', 'dog - a loyal friend'];
 
       const performanceMap = {
         cat: {
@@ -485,7 +445,7 @@ describe('WordManager', () => {
       wordManager.initializeSessionWords(performanceMap);
 
       // Get words and verify that priority scoring works
-      const word = wordManager.getNextWord('easy');
+      const word = wordManager.getNextWord();
       // Dog should have higher priority, so it's more likely to appear first
       // but due to shuffling we can't be 100% certain
       expect(['cat', 'dog']).toContain(word.text);
@@ -493,60 +453,44 @@ describe('WordManager', () => {
 
     it('should handle descriptions with multiple dashes correctly', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['mother-in-law - a relative by marriage'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['mother-in-law - a relative by marriage'];
 
       wordManager.initializeSessionWords({});
 
-      const word = wordManager.getNextWord('easy');
+      const word = wordManager.getNextWord();
       expect(word.text).toBe('mother-in-law');
       expect(word.description).toBe('a relative by marriage');
     });
 
     it('should trim whitespace from word text and description', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['  cat  -  a small furry pet  '],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['  cat  -  a small furry pet  '];
 
       wordManager.initializeSessionWords({});
 
-      const word = wordManager.getNextWord('easy');
+      const word = wordManager.getNextWord();
       expect(word.text).toBe('cat');
       expect(word.description).toBe('a small furry pet');
     });
 
     it('should handle empty description after separator', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: ['cat - '],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = ['cat - '];
 
       wordManager.initializeSessionWords({});
 
-      const word = wordManager.getNextWord('easy');
+      const word = wordManager.getNextWord();
       expect(word.text).toBe('cat');
       expect(word.description).toBeUndefined();
     });
 
     it('should handle invalid entry with empty text before separator', () => {
       // @ts-ignore
-      wordManager['words'] = {
-        easy: [' - a description'],
-        medium: [],
-        hard: [],
-      };
+      wordManager['words'] = [' - a description'];
 
       wordManager.initializeSessionWords({});
 
-      const word = wordManager.getNextWord('easy');
+      const word = wordManager.getNextWord();
       // Should fall back to using the original entry
       expect(word.text).toBe(' - a description');
       expect(word.description).toBeUndefined();

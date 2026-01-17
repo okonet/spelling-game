@@ -1,4 +1,4 @@
-import type { UserProfile, Difficulty, VoiceSettings } from './types';
+import type { UserProfile, VoiceSettings } from './types';
 import { validateGameSpeed, DEFAULT_GAME_SPEED } from './gameSpeedUtils';
 
 const PROFILES_STORAGE_KEY = 'spelling-game-profiles';
@@ -86,7 +86,6 @@ export class ProfileManager {
     email: string,
     nickname: string,
     avatar: string,
-    initialDifficulty: Difficulty,
     voiceSettings: VoiceSettings,
     gameSpeed: number = 1.0
   ): { success: boolean; error?: string; profile?: UserProfile } {
@@ -118,7 +117,6 @@ export class ProfileManager {
       nickname: nickname.trim(),
       avatar: avatar.trim(),
       preferences: {
-        initialDifficulty,
         voice: voiceSettings,
         gameSpeed: validateGameSpeed(gameSpeed),
       },

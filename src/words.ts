@@ -17,7 +17,7 @@ export class WordManager {
           const parsed = JSON.parse(customWordsJson);
 
           // Handle both formats: array or object with words property
-          let customWords: unknown;
+          let customWords: unknown[];
           if (Array.isArray(parsed)) {
             // Legacy format: direct array
             customWords = parsed;
@@ -28,16 +28,12 @@ export class WordManager {
             Array.isArray((parsed as { words: unknown }).words)
           ) {
             // Current format: object with words property
-            customWords = (parsed as { words: unknown }).words;
+            customWords = (parsed as { words: unknown[] }).words;
           } else {
             throw new Error('Invalid custom words structure');
           }
 
           // Validate that all elements are strings
-          if (!Array.isArray(customWords)) {
-            throw new Error('Custom words must be an array');
-          }
-
           const isValidArray = (arr: unknown[]): arr is string[] =>
             arr.every(item => typeof item === 'string');
 

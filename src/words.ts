@@ -1,7 +1,7 @@
 import type { WordConfig, Word, Difficulty, WordPerformanceMap } from './types';
 
 const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
-const DESCRIPTION_SEPARATOR = ' - '; // Separator between word and description
+const DESCRIPTION_SEPARATORS = [' - ', ' – ', ' — ']; // Support hyphen-minus, en dash, em dash
 
 export class WordManager {
   private words: WordConfig = { easy: [], medium: [], hard: [] };
@@ -80,18 +80,29 @@ export class WordManager {
   }
 
   /**
-   * Parse a word entry that may contain a description separated by ' - '
+   * Parse a word entry that may contain a description separated by ' - ', ' – ', or ' — '
    * Example: "cat - a small furry pet" returns { text: "cat", description: "a small furry pet" }
    */
   private parseWordEntry(entry: string): { text: string; description?: string } {
-    const separatorIndex = entry.indexOf(DESCRIPTION_SEPARATOR);
+    // Find the earliest separator in the string
+    let separatorIndex = -1;
+    let separatorLength = 0;
+
+    for (const separator of DESCRIPTION_SEPARATORS) {
+      const index = entry.indexOf(separator);
+      if (index !== -1 && (separatorIndex === -1 || index < separatorIndex)) {
+        separatorIndex = index;
+        separatorLength = separator.length;
+      }
+    }
+
     if (separatorIndex === -1) {
       // No description, return word as-is
       return { text: entry };
     }
 
     const text = entry.substring(0, separatorIndex).trim();
-    const description = entry.substring(separatorIndex + DESCRIPTION_SEPARATOR.length).trim();
+    const description = entry.substring(separatorIndex + separatorLength).trim();
 
     // Validate that the word text is not empty
     if (!text) {

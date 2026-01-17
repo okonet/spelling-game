@@ -19,15 +19,17 @@ export class WordManager {
           // Handle both formats: array or object with words property
           let customWords: unknown;
           if (Array.isArray(parsed)) {
+            // Legacy format: direct array
             customWords = parsed;
-          } else if (parsed && typeof parsed === 'object' && 'words' in parsed) {
-            customWords = parsed.words;
+          } else if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'words' in parsed &&
+            Array.isArray((parsed as { words: unknown }).words)
+          ) {
+            // Current format: object with words property
+            customWords = (parsed as { words: unknown }).words;
           } else {
-            throw new Error('Invalid custom words structure');
-          }
-
-          // Validate the structure and data types
-          if (!Array.isArray(customWords)) {
             throw new Error('Invalid custom words structure');
           }
 

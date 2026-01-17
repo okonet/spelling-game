@@ -1,7 +1,6 @@
 import type { WordConfig, Word, Difficulty, WordPerformanceMap } from './types';
 
 const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
-const DESCRIPTION_SEPARATOR = ' - '; // Separator between word and description
 const DESCRIPTION_SEPARATORS = [' - ', ' – ', ' — ']; // Support hyphen-minus, en dash, em dash
 
 export class WordManager {

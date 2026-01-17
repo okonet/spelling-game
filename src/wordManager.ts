@@ -4,7 +4,8 @@ import type { WordConfig } from './types';
 const CUSTOM_WORDS_KEY = 'spellingGame_customWords';
 const DEFAULT_WORDS_URL = '/words.json';
 
-interface CustomWordList extends WordConfig {
+interface CustomWordList {
+  words: WordConfig;
   lastModified: number;
 }
 
@@ -46,7 +47,7 @@ class WordManagerUI {
 
   private saveCustomWords(words: WordConfig): void {
     const customWordList: CustomWordList = {
-      ...words,
+      words,
       lastModified: Date.now(),
     };
     localStorage.setItem(CUSTOM_WORDS_KEY, JSON.stringify(customWordList));
@@ -55,11 +56,7 @@ class WordManagerUI {
 
   private getCurrentWords(): WordConfig {
     if (this.customWords) {
-      return {
-        easy: this.customWords.easy,
-        medium: this.customWords.medium,
-        hard: this.customWords.hard,
-      };
+      return this.customWords.words;
     }
     return this.defaultWords!;
   }
@@ -67,25 +64,17 @@ class WordManagerUI {
   private renderWords(): void {
     const currentWords = this.getCurrentWords();
 
-    const easyTextarea = document.getElementById('easy-words') as HTMLTextAreaElement;
-    const mediumTextarea = document.getElementById('medium-words') as HTMLTextAreaElement;
-    const hardTextarea = document.getElementById('hard-words') as HTMLTextAreaElement;
+    const wordsTextarea = document.getElementById('words') as HTMLTextAreaElement;
 
-    if (easyTextarea) easyTextarea.value = currentWords.easy.join('\n');
-    if (mediumTextarea) mediumTextarea.value = currentWords.medium.join('\n');
-    if (hardTextarea) hardTextarea.value = currentWords.hard.join('\n');
+    if (wordsTextarea) wordsTextarea.value = currentWords.join('\n');
 
-    this.updateWordCounts(currentWords);
+    this.updateWordCount(currentWords);
   }
 
-  private updateWordCounts(words: WordConfig): void {
-    const easyCount = document.getElementById('easy-count');
-    const mediumCount = document.getElementById('medium-count');
-    const hardCount = document.getElementById('hard-count');
+  private updateWordCount(words: WordConfig): void {
+    const wordCount = document.getElementById('word-count');
 
-    if (easyCount) easyCount.textContent = `(${words.easy.length})`;
-    if (mediumCount) mediumCount.textContent = `(${words.medium.length})`;
-    if (hardCount) hardCount.textContent = `(${words.hard.length})`;
+    if (wordCount) wordCount.textContent = `(${words.length})`;
   }
 
   private parseTextareaWords(textarea: HTMLTextAreaElement): string[] {
@@ -109,44 +98,24 @@ class WordManagerUI {
   }
 
   private handleSave(): void {
-    const easyTextarea = document.getElementById('easy-words') as HTMLTextAreaElement;
-    const mediumTextarea = document.getElementById('medium-words') as HTMLTextAreaElement;
-    const hardTextarea = document.getElementById('hard-words') as HTMLTextAreaElement;
+    const wordsTextarea = document.getElementById('words') as HTMLTextAreaElement;
 
-    if (!easyTextarea || !mediumTextarea || !hardTextarea) {
-      this.showStatus('Error: Could not find word input fields', true);
+    if (!wordsTextarea) {
+      this.showStatus('Error: Could not find word input field', true);
       return;
     }
 
-    const easyWords = this.parseTextareaWords(easyTextarea);
-    const mediumWords = this.parseTextareaWords(mediumTextarea);
-    const hardWords = this.parseTextareaWords(hardTextarea);
+    const words = this.parseTextareaWords(wordsTextarea);
 
-    // Validate that each difficulty has at least some words
-    const emptyLevels: string[] = [];
-    if (easyWords.length === 0) emptyLevels.push('Easy');
-    if (mediumWords.length === 0) emptyLevels.push('Medium');
-    if (hardWords.length === 0) emptyLevels.push('Hard');
-
-    if (emptyLevels.length > 0) {
-      this.showStatus(
-        `Error: ${emptyLevels.join(', ')} difficulty level(s) must have at least one word`,
-        true
-      );
+    // Validate that we have at least some words
+    if (words.length === 0) {
+      this.showStatus('Error: You must have at least one word', true);
       return;
     }
 
-    const newWords: WordConfig = {
-      easy: easyWords,
-      medium: mediumWords,
-      hard: hardWords,
-    };
-
-    this.saveCustomWords(newWords);
-    this.updateWordCounts(newWords);
-    this.showStatus(
-      `✓ Saved successfully! ${easyWords.length + mediumWords.length + hardWords.length} total words`
-    );
+    this.saveCustomWords(words);
+    this.updateWordCount(words);
+    this.showStatus(`✓ Saved successfully! ${words.length} total words`);
   }
 
   private async handleReset(): Promise<void> {
@@ -185,23 +154,13 @@ class WordManagerUI {
       backButton.addEventListener('click', () => this.handleBackToMenu());
     }
 
-    // Update word counts as user types
-    const textareas = document.querySelectorAll('.word-textarea');
-    textareas.forEach(textarea => {
+    // Update word count as user types
+    const textarea = document.getElementById('words') as HTMLTextAreaElement;
+    if (textarea) {
       textarea.addEventListener('input', () => {
-        const easyTextarea = document.getElementById('easy-words') as HTMLTextAreaElement;
-        const mediumTextarea = document.getElementById('medium-words') as HTMLTextAreaElement;
-        const hardTextarea = document.getElementById('hard-words') as HTMLTextAreaElement;
-
-        if (easyTextarea && mediumTextarea && hardTextarea) {
-          this.updateWordCounts({
-            easy: this.parseTextareaWords(easyTextarea),
-            medium: this.parseTextareaWords(mediumTextarea),
-            hard: this.parseTextareaWords(hardTextarea),
-          });
-        }
+        this.updateWordCount(this.parseTextareaWords(textarea));
       });
-    });
+    }
   }
 }
 

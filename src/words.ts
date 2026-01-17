@@ -80,18 +80,31 @@ export class WordManager {
   }
 
   /**
-   * Parse a word entry that may contain a description separated by ' - '
+   * Parse a word entry that may contain a description separated by ' - ', ' – ', or ' — '
    * Example: "cat - a small furry pet" returns { text: "cat", description: "a small furry pet" }
    */
   private parseWordEntry(entry: string): { text: string; description?: string } {
-    const separatorIndex = entry.indexOf(DESCRIPTION_SEPARATOR);
+    // Support multiple dash types: hyphen-minus, en dash, em dash
+    const separators = [' - ', ' – ', ' — '];
+    let separatorIndex = -1;
+    let separatorLength = 0;
+
+    for (const separator of separators) {
+      const index = entry.indexOf(separator);
+      if (index !== -1) {
+        separatorIndex = index;
+        separatorLength = separator.length;
+        break;
+      }
+    }
+
     if (separatorIndex === -1) {
       // No description, return word as-is
       return { text: entry };
     }
 
     const text = entry.substring(0, separatorIndex).trim();
-    const description = entry.substring(separatorIndex + DESCRIPTION_SEPARATOR.length).trim();
+    const description = entry.substring(separatorIndex + separatorLength).trim();
 
     // Validate that the word text is not empty
     if (!text) {

@@ -551,5 +551,110 @@ describe('WordManager', () => {
       expect(word.text).toBe(' - a description');
       expect(word.description).toBeUndefined();
     });
+
+    it('should parse words with en dash (–) separator correctly', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat – a small furry pet', 'dog – a loyal animal friend'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word1 = wordManager.getNextWord('easy');
+      const word2 = wordManager.getNextWord('easy');
+
+      // Check first word
+      if (word1.text === 'cat') {
+        expect(word1.description).toBe('a small furry pet');
+      } else {
+        expect(word1.text).toBe('dog');
+        expect(word1.description).toBe('a loyal animal friend');
+      }
+
+      // Check second word
+      if (word2.text === 'cat') {
+        expect(word2.description).toBe('a small furry pet');
+      } else {
+        expect(word2.text).toBe('dog');
+        expect(word2.description).toBe('a loyal animal friend');
+      }
+    });
+
+    it('should parse words with em dash (—) separator correctly', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat — a small furry pet', 'dog — a loyal animal friend'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word1 = wordManager.getNextWord('easy');
+      const word2 = wordManager.getNextWord('easy');
+
+      // Check first word
+      if (word1.text === 'cat') {
+        expect(word1.description).toBe('a small furry pet');
+      } else {
+        expect(word1.text).toBe('dog');
+        expect(word1.description).toBe('a loyal animal friend');
+      }
+
+      // Check second word
+      if (word2.text === 'cat') {
+        expect(word2.description).toBe('a small furry pet');
+      } else {
+        expect(word2.text).toBe('dog');
+        expect(word2.description).toBe('a loyal animal friend');
+      }
+    });
+
+    it('should handle mixed separator types (hyphen, en dash, em dash)', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['cat - a small furry pet', 'dog – a loyal animal friend', 'sun — a bright star'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const words = [
+        wordManager.getNextWord('easy'),
+        wordManager.getNextWord('easy'),
+        wordManager.getNextWord('easy'),
+      ];
+
+      // Find each word and verify
+      const catWord = words.find(w => w.text === 'cat');
+      expect(catWord).toBeDefined();
+      expect(catWord?.description).toBe('a small furry pet');
+
+      const dogWord = words.find(w => w.text === 'dog');
+      expect(dogWord).toBeDefined();
+      expect(dogWord?.description).toBe('a loyal animal friend');
+
+      const sunWord = words.find(w => w.text === 'sun');
+      expect(sunWord).toBeDefined();
+      expect(sunWord?.description).toBe('a bright star');
+    });
+
+    it('should handle en dash in word text with em dash separator', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['mother–in–law — a relative by marriage'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toBe('mother–in–law');
+      expect(word.description).toBe('a relative by marriage');
+    });
   });
 });

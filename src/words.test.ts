@@ -656,5 +656,20 @@ describe('WordManager', () => {
       expect(word.text).toBe('mother–in–law');
       expect(word.description).toBe('a relative by marriage');
     });
+
+    it('should find earliest separator when multiple separator types exist', () => {
+      // @ts-ignore
+      wordManager['words'] = {
+        easy: ['test – first — second - third'],
+        medium: [],
+        hard: [],
+      };
+
+      wordManager.initializeSessionWords({});
+
+      const word = wordManager.getNextWord('easy');
+      expect(word.text).toBe('test');
+      expect(word.description).toBe('first — second - third');
+    });
   });
 });

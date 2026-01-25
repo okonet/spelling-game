@@ -164,6 +164,13 @@ class WordManagerUI {
   }
 }
 
+// Stop any speech synthesis when navigating away from word manager
+window.addEventListener('beforeunload', () => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+});
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   const wordManager = new WordManagerUI();
